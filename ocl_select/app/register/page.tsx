@@ -264,7 +264,9 @@ export default function RegisterPage() {
                     Student ID
                   </label>
                   <input
-                    type="text"
+                    type="tel"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     required
                     value={formData.student_id}
                     onChange={(e) =>
@@ -316,6 +318,7 @@ export default function RegisterPage() {
                     </label>
                     <input
                       type="text"
+                      inputMode="decimal"
                       value={formData.class}
                       onChange={(e) =>
                         setFormData({ ...formData, class: e.target.value })
@@ -330,7 +333,9 @@ export default function RegisterPage() {
                       Class Number
                     </label>
                     <input
-                      type="text"
+                      type="tel"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       value={formData.class_no}
                       onChange={(e) =>
                         setFormData({ ...formData, class_no: e.target.value })

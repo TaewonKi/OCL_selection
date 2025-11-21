@@ -27,8 +27,11 @@ interface Student {
 export default function TeacherPage() {
   const [cities, setCities] = useState<City[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
+  const [allStudents, setAllStudents] = useState<Student[]>([]);
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
+  const [selectedClass, setSelectedClass] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [uniqueClasses, setUniqueClasses] = useState<string[]>([]);
 
   const exportToGoogleSheets = () => {
     // Get the filtered city name
@@ -101,7 +104,12 @@ export default function TeacherPage() {
         },
       });
       const data = await response.json();
+      setAllStudents(data.students || []);
       setStudents(data.students || []);
+      
+      // Extract unique classes
+      const classes = Array.from(new Set((data.students || []).map((s: Student) => s.class).filter(Boolean))) as string[];
+      setUniqueClasses(classes.sort());
     } catch (error) {
       console.error("Error fetching students:", error);
     } finally {
@@ -117,6 +125,17 @@ export default function TeacherPage() {
   useEffect(() => {
     fetchStudents(selectedCity);
   }, [selectedCity]);
+
+  // Apply filters
+  useEffect(() => {
+    let filtered = [...allStudents];
+    
+    if (selectedClass) {
+      filtered = filtered.filter(s => s.class === selectedClass);
+    }
+    
+    setStudents(filtered);
+  }, [selectedClass, allStudents]);
 
   return (
     <div className="min-h-screen bg-white dark:bg-black">
@@ -168,6 +187,38 @@ export default function TeacherPage() {
                 }`}
               >
                 {city.name} ({city.current_count}/{city.quota})
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Class Filter Section */}
+        <div className="mb-8">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Filter by Class
+          </label>
+          <div className="flex gap-4 overflow-x-auto pb-4">
+            <button
+              onClick={() => setSelectedClass(null)}
+              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                selectedClass === null
+                  ? "bg-purple-600 text-white"
+                  : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+              }`}
+            >
+              All Classes
+            </button>
+            {uniqueClasses.map((classItem) => (
+              <button
+                key={classItem}
+                onClick={() => setSelectedClass(classItem)}
+                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                  selectedClass === classItem
+                    ? "bg-purple-600 text-white"
+                    : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+                }`}
+              >
+                {classItem}
               </button>
             ))}
           </div>

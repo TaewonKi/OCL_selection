@@ -318,7 +318,6 @@ export default function RegisterPage() {
                     </label>
                     <input
                       type="text"
-                      inputMode="decimal"
                       value={formData.class}
                       onChange={(e) =>
                         setFormData({ ...formData, class: e.target.value })

@@ -37,6 +37,7 @@ export default function RegisterPage() {
   const [showErrorPopup, setShowErrorPopup] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [registeredCityName, setRegisteredCityName] = useState<string>("");
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   // Auto-hide error popup after 5 seconds
   useEffect(() => {
@@ -87,7 +88,7 @@ export default function RegisterPage() {
     };
   }, []);
 
-  // Handle form submission
+  // Handle form submission - show confirmation
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -97,9 +98,15 @@ export default function RegisterPage() {
       return;
     }
 
+    setShowConfirmation(true);
+  };
+
+  // Handle actual registration after confirmation
+  const confirmRegistration = async () => {
     setLoading(true);
     setMessage(null);
     setShowErrorPopup(false);
+    setShowConfirmation(false);
 
     try {
       const functionsUrl = process.env.NEXT_PUBLIC_SUPABASE_FUNCTIONS_URL;
@@ -134,6 +141,75 @@ export default function RegisterPage() {
       setLoading(false);
     }
   };
+
+  // Confirmation page
+  if (showConfirmation) {
+    const selectedCityData = cities.find(c => c.city_id === selectedCity);
+    return (
+      <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center p-4">
+        <div className="max-w-2xl w-full bg-white dark:bg-gray-900 border border-blue-200 dark:border-blue-800 rounded-3xl shadow-2xl p-8 sm:p-12">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-blue-100 dark:bg-blue-900/50 rounded-full mb-6">
+              <svg className="w-10 h-10 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-3">
+              Confirm Your Information
+            </h1>
+            <p className="text-lg text-gray-600 dark:text-gray-400">
+              Please review your details before submitting
+            </p>
+          </div>
+
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-6 sm:p-8 space-y-4 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Student ID</p>
+                <p className="text-lg font-semibold text-gray-900 dark:text-white">{formData.student_id}</p>
+              </div>
+              
+              <div>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Name</p>
+                <p className="text-lg font-semibold text-gray-900 dark:text-white">{formData.name} {formData.surname}</p>
+              </div>
+              
+              <div>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Class</p>
+                <p className="text-lg font-semibold text-gray-900 dark:text-white">{formData.class}</p>
+              </div>
+              
+              <div>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Class Number</p>
+                <p className="text-lg font-semibold text-gray-900 dark:text-white">{formData.class_no}</p>
+              </div>
+            </div>
+
+            <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Destination</p>
+              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{selectedCityData?.name}</p>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button
+              onClick={() => setShowConfirmation(false)}
+              className="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-semibold py-4 rounded-xl transition-all"
+            >
+              Go Back
+            </button>
+            <button
+              onClick={confirmRegistration}
+              disabled={loading}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold py-4 rounded-xl transition-all disabled:cursor-not-allowed"
+            >
+              {loading ? "Registering..." : "Confirm & Register"}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Success page
   if (registrationSuccess) {

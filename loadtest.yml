@@ -1,0 +1,9 @@
+config:
+  target: "https://spkipocl.vercel.app/"
+  phases:
+    - duration: 60
+      arrivalRate: 500
+scenarios:
+  - flow:
+    - get:
+        url: "/"

@@ -113,7 +113,7 @@ export function Countdown({ className, onAvailabilityChange }: CountdownProps) {
         )}
 
         <div className="flex items-center justify-center gap-2 text-sm text-slate-500 pt-6 border-t border-slate-100">
-          <span>3 Dec 2025, 12:37 PM UTC+7</span>
+          <span>8 Dec 2025, 6.00PM UTC+7</span>
           <StatusBar unlocked={unlocked} isSynced={isSynced} rttMs={syncState?.rttMs} />
         </div>
       </div>

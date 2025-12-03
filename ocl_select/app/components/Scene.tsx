@@ -3,6 +3,7 @@
 import { useRef, useMemo } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Points, PointMaterial, Float } from "@react-three/drei";
+import type { Mesh, Points as ThreePoints } from "three";
 
 function generateSpherePoints(count: number, radius: number) {
   const points = new Float32Array(count * 3);
@@ -23,7 +24,7 @@ function generateSpherePoints(count: number, radius: number) {
 }
 
 function Globe() {
-  const meshRef = useRef<any>(null);
+  const meshRef = useRef<Mesh | null>(null);
 
   useFrame((state, delta) => {
     if (meshRef.current) {
@@ -53,7 +54,7 @@ function Globe() {
 }
 
 function FloatingParticles() {
-    const ref = useRef<any>(null);
+  const ref = useRef<ThreePoints | null>(null);
     const sphere = useMemo(() => generateSpherePoints(1000, 2), []);
 
     useFrame((state, delta) => {

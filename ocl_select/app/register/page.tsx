@@ -144,6 +144,7 @@ export default function RegisterPage() {
         setShowErrorPopup(true);
       }
     } catch (error) {
+      console.error("Failed to register student", error);
       setMessage({ type: "error", text: "Failed to register. Please try again." });
       setShowErrorPopup(true);
     } finally {

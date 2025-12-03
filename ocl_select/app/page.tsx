@@ -3,10 +3,13 @@
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
+import { useState } from "react";
+import { Countdown } from "./components/Countdown";
 
 const Scene = dynamic(() => import("./components/Scene"), { ssr: false });
 
 export default function LandingPage() {
+  const [registrationOpen, setRegistrationOpen] = useState(false);
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-blue-50 via-white to-blue-50 text-slate-900 overflow-hidden flex flex-col">
       <Scene />
@@ -40,20 +43,41 @@ export default function LandingPage() {
           </motion.p>
           
           <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
+            className="mb-12"
+          >
+            <Countdown className="mx-auto max-w-2xl" onAvailabilityChange={setRegistrationOpen} />
+          </motion.div>
+          
+          <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.4 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
-            <Link 
-              href="/register"
-              className="group relative inline-flex items-center justify-center px-8 py-4 font-bold text-white transition-all duration-200 bg-blue-600 font-pj rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 hover:bg-blue-700 hover:shadow-lg active:scale-95"
-            >
-              <span className="relative text-lg">Start Registration</span>
-              <svg className="relative w-5 h-5 ml-2 transition-transform duration-200 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </Link>
+            {registrationOpen ? (
+              <Link 
+                href="/register"
+                className="group relative inline-flex items-center justify-center px-8 py-4 font-bold text-white transition-all duration-200 bg-blue-600 font-pj rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 hover:bg-blue-700 hover:shadow-lg active:scale-95"
+              >
+                <span className="relative text-lg">Start Registration</span>
+                <svg className="relative w-5 h-5 ml-2 transition-transform duration-200 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </Link>
+            ) : (
+              <button 
+                disabled
+                className="relative inline-flex items-center justify-center px-8 py-4 font-bold text-slate-400 transition-all duration-200 bg-slate-100 font-pj rounded-full cursor-not-allowed opacity-60"
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                <span className="relative text-lg">Registration Opens Soon</span>
+              </button>
+            )}
             
             <Link 
               href="/teacher"

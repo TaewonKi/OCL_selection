@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useServerTime } from '../hooks/useServerTime';
 
-const TARGET_TIMESTAMP = Date.parse('2025-12-03T05:40:00.000Z');
+const TARGET_TIMESTAMP = Date.parse('2025-12-08T11:00:00.000Z');
 const REFRESH_INTERVAL_MS = 250;
 
 type CountdownProps = {

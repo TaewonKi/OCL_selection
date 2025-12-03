@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
-import { Countdown } from "../components/Countdown";
 
 interface City {
   city_id: string;
@@ -22,7 +21,7 @@ interface FormData {
   class_no: string;
 }
 
-export default function RegisterPage() {
+export default function RootRootPage() {
   const [cities, setCities] = useState<City[]>([]);
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>({
@@ -41,7 +40,6 @@ export default function RegisterPage() {
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [registeredCityName, setRegisteredCityName] = useState<string>("");
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [registrationOpen, setRegistrationOpen] = useState(false);
   const homeButtonClasses = "inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-700 border border-slate-200 rounded-full hover:bg-slate-50 hover:text-blue-600 transition-all shadow-sm";
 
   // Auto-hide error popup after 5 seconds
@@ -391,11 +389,6 @@ export default function RegisterPage() {
                   <p className="text-lg text-slate-600 max-w-2xl">Select your destination and fill in your details below to secure your spot.</p>
               </div>
 
-              {/* Countdown Timer */}
-              <div className="mb-8">
-                <Countdown onAvailabilityChange={setRegistrationOpen} />
-              </div>
-
               {/* Two Column Layout for iPad Landscape */}
               <div className="flex flex-col md:flex-row gap-8 lg:gap-12">
                 {/* Registration Form - Left Side */}
@@ -417,13 +410,12 @@ export default function RegisterPage() {
                           pattern="[0-9]{5}"
                           maxLength={5}
                           required
-                          disabled={!registrationOpen}
                           value={formData.student_id}
                           onChange={(e) => {
                             const value = e.target.value.replace(/\D/g, '').slice(0, 5);
                             setFormData({ ...formData, student_id: value });
                           }}
-                          className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900 transition-all text-base placeholder:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900 transition-all text-base placeholder:text-slate-400"
                           placeholder="12345"
                         />
                       </div>
@@ -436,12 +428,11 @@ export default function RegisterPage() {
                           <input
                             type="text"
                             required
-                            disabled={!registrationOpen}
                             value={formData.name}
                             onChange={(e) =>
                               setFormData({ ...formData, name: e.target.value })
                             }
-                            className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900 transition-all text-base placeholder:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900 transition-all text-base placeholder:text-slate-400"
                             placeholder="Somchai"
                           />
                         </div>
@@ -453,12 +444,11 @@ export default function RegisterPage() {
                           <input
                             type="text"
                             required
-                            disabled={!registrationOpen}
                             value={formData.surname}
                             onChange={(e) =>
                               setFormData({ ...formData, surname: e.target.value })
                             }
-                            className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900 transition-all text-base placeholder:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900 transition-all text-base placeholder:text-slate-400"
                             placeholder="Rakna"
                           />
                         </div>
@@ -472,12 +462,11 @@ export default function RegisterPage() {
                           <div className="relative">
                             <select
                               required
-                              disabled={!registrationOpen}
                               value={formData.class}
                               onChange={(e) =>
                                 setFormData({ ...formData, class: e.target.value })
                               }
-                              className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900 transition-all text-base appearance-none disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900 transition-all text-base appearance-none"
                             >
                               <option value="" disabled>Select Class</option>
                               <option value="1/12">1/12</option>
@@ -509,12 +498,11 @@ export default function RegisterPage() {
                             type="tel"
                             inputMode="numeric"
                             pattern="[0-9]*"
-                            disabled={!registrationOpen}
                             value={formData.class_no}
                             onChange={(e) =>
                               setFormData({ ...formData, class_no: e.target.value })
                             }
-                            className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900 transition-all text-base placeholder:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900 transition-all text-base placeholder:text-slate-400"
                             placeholder="33"
                           />
                         </div>
@@ -535,12 +523,12 @@ export default function RegisterPage() {
                       {cities.map((city) => (
                         <button
                           key={city.city_id}
-                          onClick={() => city.remaining > 0 && registrationOpen && setSelectedCity(city.city_id)}
-                          disabled={city.remaining === 0 || !registrationOpen}
+                          onClick={() => city.remaining > 0 && setSelectedCity(city.city_id)}
+                          disabled={city.remaining === 0}
                           className={`
                             relative p-5 sm:p-6 rounded-2xl border transition-all text-left group
                             ${
-                              city.remaining === 0 || !registrationOpen
+                              city.remaining === 0
                                 ? "bg-slate-50 border-slate-200 opacity-60 cursor-not-allowed"
                                 : selectedCity === city.city_id
                                 ? "bg-blue-50 border-blue-500 ring-1 ring-blue-500 shadow-md"
@@ -591,10 +579,10 @@ export default function RegisterPage() {
 
                     <button
                       onClick={handleSubmit}
-                      disabled={loading || !selectedCity || !registrationOpen}
+                      disabled={loading || !selectedCity}
                       className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:bg-slate-200 disabled:text-slate-400 text-white font-bold py-4 px-6 rounded-full transition-all disabled:cursor-not-allowed text-lg shadow-lg hover:shadow-xl active:scale-[0.98]"
                     >
-                      {loading ? "Registering..." : !registrationOpen ? "Registration Not Open" : "Continue"}
+                      {loading ? "Registering..." : "Continue"}
                     </button>
                   </div>
                 </div>

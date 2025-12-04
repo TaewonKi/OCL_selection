@@ -69,8 +69,8 @@ def main() -> None:
 		default=os.environ.get("SUPABASE_CITY_ID") or "3f7ed9be-a68f-4748-a470-0bf58c9e6a42",
 		help="City UUID (defaults to SUPABASE_CITY_ID)",
 	)
-	parser.add_argument("--count", type=int, default=900, help="Requests to send")
-	parser.add_argument("--window", type=float, default=30.0, help="Window in seconds")
+	parser.add_argument("--count", type=int, default=100, help="Requests to send")
+	parser.add_argument("--window", type=float, default=5.0, help="Window in seconds")
 	parser.add_argument(
 		"--workers",
 		type=int,

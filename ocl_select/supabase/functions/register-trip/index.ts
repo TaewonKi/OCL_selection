@@ -6,6 +6,31 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Simple in-memory queue manager to ensure we process registrations
+// sequentially per city within the same function instance.
+const cityQueues = new Map<string, Promise<void>>();
+
+async function enqueueCityTask<T>(cityId: string, task: () => Promise<T>): Promise<T> {
+  const previous = cityQueues.get(cityId) ?? Promise.resolve();
+
+  let release: () => void;
+  const current = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+
+  cityQueues.set(cityId, previous.then(() => current));
+
+  try {
+    await previous;
+    return await task();
+  } finally {
+    release!();
+    if (cityQueues.get(cityId) === current) {
+      cityQueues.delete(cityId);
+    }
+  }
+}
+
 interface RegisterRequest {
   student_id: string;
   name: string;
@@ -14,6 +39,10 @@ interface RegisterRequest {
   class_no: string;
   city_id: string;
 }
+
+type RegisterResponse =
+  | { success: true; message: string }
+  | { success: false; error_code: string; message: string };
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -47,98 +76,39 @@ serve(async (req) => {
       );
     }
 
-    // Check if student already registered
-    const { data: existingStudent, error: checkError } = await supabaseClient
-      .from("students")
-      .select("student_id")
-      .eq("student_id", student_id)
-      .single();
-
-    if (existingStudent) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error_code: "ALREADY_REGISTERED",
-          message: "This student has already applied.",
-        }),
+    // Run registration inside Postgres transaction via RPC to avoid race conditions
+    // The DB function is already transactional, but enqueue the request
+    // so only one registration per city runs at a time inside this instance.
+    const rpcResult = await enqueueCityTask(city_id, async () => {
+      const { data, error } = await supabaseClient.rpc<RegisterResponse>(
+        "register_student_with_quota",
         {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          p_student_id: student_id,
+          p_name: name,
+          p_surname: surname,
+          p_class: studentClass,
+          p_class_no: class_no,
+          p_city_id: city_id,
         }
       );
-    }
 
-    // Get city quota
-    const { data: city, error: cityError } = await supabaseClient
-      .from("cities")
-      .select("quota")
-      .eq("id", city_id)
-      .single();
+      if (error) {
+        throw error;
+      }
 
-    if (cityError || !city) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error_code: "INVALID_CITY",
-          message: "Invalid city selected.",
-        }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
+      if (!data) {
+        throw new Error("Empty response from register_student_with_quota");
+      }
 
-    // Count current students in the city
-    const { count, error: countError } = await supabaseClient
-      .from("students")
-      .select("*", { count: "exact", head: true })
-      .eq("city_id", city_id);
-
-    if (countError) {
-      throw countError;
-    }
-
-    // Check if quota is full
-    if (count !== null && count >= city.quota) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error_code: "QUOTA_FULL",
-          message: "The selected city is full.",
-        }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    // Insert student
-    const { error: insertError } = await supabaseClient.from("students").insert({
-      student_id,
-      name,
-      surname,
-      class: studentClass,
-      class_no,
-      city_id,
+      return data;
     });
 
-    if (insertError) {
-      throw insertError;
-    }
+    const status = rpcResult.success ? 200 : 400;
 
-    // Success response
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: "Registered successfully.",
-      }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+    return new Response(JSON.stringify(rpcResult), {
+      status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (error) {
     console.error("Error:", error);
     return new Response(

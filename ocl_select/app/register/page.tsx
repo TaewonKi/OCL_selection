@@ -423,7 +423,7 @@ export default function RegisterPage() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
                         <div>
                           <label className="block text-sm font-semibold text-slate-700 mb-2">
-                            First Name
+                            First Name (In Thai)
                           </label>
                           <input
                             type="text"
@@ -439,7 +439,7 @@ export default function RegisterPage() {
 
                         <div>
                           <label className="block text-sm font-semibold text-slate-700 mb-2">
-                            Last Name
+                            Last Name (In Thai)
                           </label>
                           <input
                             type="text"

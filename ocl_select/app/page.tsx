@@ -90,7 +90,7 @@ export default function LandingPage() {
       </div>
       
       <footer className="relative z-10 py-6 text-center text-slate-500 text-sm">
-        © 2025 OCL Selection. All rights reserved.
+        © 2025 Taewon. All rights reserved.
       </footer>
     </div>
   );

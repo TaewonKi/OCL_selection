@@ -1,19 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { Countdown } from "./components/Countdown";
-
-const Scene = dynamic(() => import("./components/Scene"), { ssr: false });
 
 export default function LandingPage() {
   const [registrationOpen, setRegistrationOpen] = useState(false);
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-blue-50 via-white to-blue-50 text-slate-900 overflow-hidden flex flex-col">
-      <Scene />
-      
       {/* Hero Section */}
       <div className="flex-grow flex items-center justify-center z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center py-20">

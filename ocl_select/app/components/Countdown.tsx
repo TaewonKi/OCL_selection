@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useServerTime } from '../hooks/useServerTime';
 
-const TARGET_TIMESTAMP = Date.parse('2025-12-08T11:00:00.000Z');
+const TARGET_TIMESTAMP = Date.parse('2099-12-31T23:59:59.999Z'); // TBA - Set to far future
 const REFRESH_INTERVAL_MS = 250;
 
 type CountdownProps = {
@@ -113,7 +113,7 @@ export function Countdown({ className, onAvailabilityChange }: CountdownProps) {
         )}
 
         <div className="flex items-center justify-center gap-2 text-sm text-slate-500 pt-6 border-t border-slate-100">
-          <span>8 Dec 2025, 6.00PM UTC+7</span>
+          <span>TBA</span>
           <StatusBar unlocked={unlocked} isSynced={isSynced} rttMs={syncState?.rttMs} />
         </div>
       </div>

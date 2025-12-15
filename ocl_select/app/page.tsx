@@ -78,6 +78,13 @@ export default function LandingPage() {
             )}
             
             <Link 
+              href="/check"
+              className="inline-flex items-center justify-center px-8 py-4 font-bold text-slate-700 transition-all duration-200 bg-white border border-slate-200 rounded-full hover:bg-slate-50 hover:text-blue-600 hover:border-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-200 active:scale-95 shadow-sm"
+            >
+              Check Registration
+            </Link>
+            
+            <Link 
               href="/teacher"
               className="inline-flex items-center justify-center px-8 py-4 font-bold text-slate-700 transition-all duration-200 bg-white border border-slate-200 rounded-full hover:bg-slate-50 hover:text-blue-600 hover:border-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-200 active:scale-95 shadow-sm"
             >

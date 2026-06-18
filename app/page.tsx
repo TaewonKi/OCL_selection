@@ -25,9 +25,9 @@ export default function LandingPage() {
             <span className="inline-block py-1 px-3 rounded-full bg-blue-100 text-blue-700 text-sm font-semibold mb-6 tracking-wide uppercase">
               Explore The World
             </span>
-            <h1 className="text-5xl sm:text-6xl lg:text-8xl font-extrabold mb-8 tracking-tight text-slate-900">
+            <h1 className="title-float text-5xl sm:text-6xl lg:text-8xl font-extrabold mb-8 tracking-tight text-slate-900">
               Outside Classroom <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+              <span className="animated-gradient-text">
                 Learning 2027
               </span>
             </h1>

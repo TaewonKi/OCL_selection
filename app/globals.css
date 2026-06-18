@@ -55,6 +55,67 @@ body {
   animation: blob 7s infinite;
 }
 
+/* Animated, glowing gradient title */
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+@keyframes title-glow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 6px rgba(37, 99, 235, 0.3));
+  }
+  50% {
+    filter: drop-shadow(0 0 20px rgba(99, 102, 241, 0.6));
+  }
+}
+
+@keyframes title-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animated-gradient-text {
+  background-image: linear-gradient(
+    90deg,
+    #2563eb,
+    #6366f1,
+    #818cf8,
+    #6366f1,
+    #2563eb
+  );
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: gradient-shift 6s linear infinite,
+    title-glow 3.5s ease-in-out infinite;
+}
+
+.title-float {
+  animation: title-float 5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animated-gradient-text {
+    animation: title-glow 3.5s ease-in-out infinite;
+  }
+  .title-float {
+    animation: none;
+  }
+}
+
 .animation-delay-2000 {
   animation-delay: 2s;
 }

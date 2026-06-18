@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
 import { Countdown } from "../components/Countdown";
 import { AirplaneSeatMap } from "../components/AirplaneSeatMap";
+import { ThailandMap } from "../components/ThailandMap";
 
 interface City {
   city_id: string;
@@ -522,72 +523,45 @@ export default function RegisterPage() {
                       <h2 className="font-serif text-2xl font-semibold text-ink">Choose your destination</h2>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-4 mb-8">
-                      {cities.map((city, idx) => {
-                        const isFull = city.remaining === 0;
-                        const isLocked = isFull || !registrationOpen;
-                        const isSelected = selectedCity === city.city_id;
-                        return (
-                          <button
-                            key={city.city_id}
-                            onClick={() => !isLocked && setSelectedCity(city.city_id)}
-                            disabled={isLocked}
-                            aria-pressed={isSelected}
-                            className={`
-                              relative flex overflow-hidden rounded-2xl border bg-white text-left transition-all
-                              ${
-                                isLocked
-                                  ? "border-line opacity-60 grayscale cursor-not-allowed"
-                                  : isSelected
-                                  ? "border-brass ring-2 ring-brass shadow-md"
-                                  : "border-line hover:border-ink/30 hover:shadow-md"
-                              }
-                            `}
-                          >
-                            {/* Main body */}
-                            <div className="flex-1 p-5 sm:p-6 flex items-center gap-4 sm:gap-5">
-                              <div className="min-w-0 flex-1">
-                                <p className="font-mono text-[0.6rem] tracking-[0.2em] uppercase text-ink-soft mb-2">
-                                  Destination · {gateCode(idx)}
-                                </p>
-                                <h3 className={`font-serif text-2xl sm:text-3xl font-semibold mb-3 ${isSelected ? "text-brass" : "text-ink"}`}>
-                                  {city.name}
-                                </h3>
-                                <p className="font-mono text-[0.65rem] tracking-[0.1em] uppercase text-ink-soft tabular-nums">
-                                  {city.current_count} / {city.quota} seats taken
-                                </p>
-                              </div>
-                              <AirplaneSeatMap
-                                total={city.quota}
-                                taken={city.current_count}
-                                variant={isFull ? "full" : isSelected ? "selected" : "available"}
-                                className="w-[108px] sm:w-[128px] shrink-0 h-auto"
-                              />
-                            </div>
+                    <p className="font-mono text-[0.65rem] tracking-[0.1em] uppercase text-ink-soft mb-5">
+                      Tap a pin to choose where you&apos;ll fly.
+                    </p>
 
-                            {/* Tear-off stub */}
-                            <div className="stub w-24 sm:w-28 shrink-0 border-l-2 border-dashed border-ink/25 bg-security flex flex-col items-center justify-center py-5">
-                              <span className="font-mono text-[0.55rem] tracking-[0.2em] uppercase text-ink-soft">Seats</span>
-                              <span className={`font-mono text-3xl sm:text-4xl font-semibold tabular-nums leading-none my-1 ${isSelected ? "text-brass" : "text-ink"}`}>
-                                {city.remaining}
-                              </span>
-                              <span className="font-mono text-[0.55rem] tracking-[0.2em] uppercase text-ink-soft">Left</span>
-                            </div>
+                    <ThailandMap
+                      cities={cities}
+                      selectedCity={selectedCity}
+                      onSelect={setSelectedCity}
+                      registrationOpen={registrationOpen}
+                    />
 
-                            {/* Stamps */}
-                            {isSelected && (
-                              <span className="stamp stamp-in text-brass absolute top-4 right-[6.5rem] sm:right-[7.5rem]">
-                                Selected
-                              </span>
-                            )}
-                            {isFull && (
-                              <span className="stamp text-oxblood absolute top-4 right-[6.5rem] sm:right-[7.5rem]">
-                                Full
-                              </span>
-                            )}
-                          </button>
-                        );
-                      })}
+                    {/* Selected destination — its cabin */}
+                    <div className="mt-6 mb-8">
+                      {selectedCityData ? (
+                        <div className="relative flex items-center gap-4 sm:gap-5 rounded-2xl border border-brass/40 bg-brass/5 bg-security p-4 sm:p-5">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-mono text-[0.6rem] tracking-[0.2em] uppercase text-ink-soft mb-1">
+                              {gateCode(selectedIndex)} · Your cabin
+                            </p>
+                            <h3 className="font-serif text-2xl sm:text-3xl font-semibold text-brass mb-1">
+                              {selectedCityData.name}
+                            </h3>
+                            <p className="font-mono text-[0.65rem] tracking-[0.1em] uppercase text-ink-soft tabular-nums">
+                              {selectedCityData.current_count} / {selectedCityData.quota} taken · {selectedCityData.remaining} left
+                            </p>
+                          </div>
+                          <AirplaneSeatMap
+                            total={selectedCityData.quota}
+                            taken={selectedCityData.current_count}
+                            variant="selected"
+                            className="w-[116px] sm:w-[136px] shrink-0 h-auto"
+                          />
+                          <span className="stamp stamp-in text-brass absolute -top-3 right-5">Selected</span>
+                        </div>
+                      ) : (
+                        <div className="rounded-2xl border border-dashed border-line p-6 text-center font-mono text-[0.7rem] tracking-[0.15em] uppercase text-ink-soft">
+                          Tap a destination to preview its cabin
+                        </div>
+                      )}
                     </div>
 
                     <button

@@ -4,11 +4,16 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { Countdown } from "./components/Countdown";
+import Scene from "./components/Scene";
 
 export default function LandingPage() {
   const [registrationOpen, setRegistrationOpen] = useState(false);
   return (
-    <div className="relative min-h-screen bg-gradient-to-b from-blue-50 via-white to-blue-50 text-slate-900 overflow-hidden flex flex-col">
+    <div className="relative min-h-screen text-slate-900 overflow-hidden flex flex-col">
+      {/* Animated 3D background */}
+      <Scene />
+      {/* Soft gradient wash so the globe stays subtle behind the content */}
+      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-blue-50/70 via-white/60 to-blue-50/70" />
       {/* Hero Section */}
       <div className="flex-grow flex items-center justify-center z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center py-20">
@@ -55,7 +60,7 @@ export default function LandingPage() {
             {registrationOpen ? (
               <Link 
                 href="/register"
-                className="group relative inline-flex items-center justify-center px-8 py-4 font-bold text-white transition-all duration-200 bg-blue-600 font-pj rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 hover:bg-blue-700 active:scale-95 shadow-lg hover:shadow-2xl animate-pulse hover:animate-none"
+                className="group relative inline-flex items-center justify-center px-8 py-4 font-bold text-white transition-all duration-200 bg-blue-600 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 hover:bg-blue-700 active:scale-95 shadow-lg hover:shadow-2xl animate-pulse hover:animate-none"
                 style={{
                   boxShadow: '0 0 20px rgba(59, 130, 246, 0.5), 0 0 40px rgba(59, 130, 246, 0.3), 0 0 60px rgba(59, 130, 246, 0.2)'
                 }}
@@ -68,7 +73,7 @@ export default function LandingPage() {
             ) : (
               <button 
                 disabled
-                className="relative inline-flex items-center justify-center px-8 py-4 font-bold text-slate-400 transition-all duration-200 bg-slate-100 font-pj rounded-full cursor-not-allowed opacity-60"
+                className="relative inline-flex items-center justify-center px-8 py-4 font-bold text-slate-400 transition-all duration-200 bg-slate-100 rounded-full cursor-not-allowed opacity-60"
               >
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />

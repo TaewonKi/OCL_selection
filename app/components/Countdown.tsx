@@ -13,7 +13,7 @@ const useIsClient = () =>
     () => false
   );
 
-const TARGET_DATE = new Date('2027-01-01T11:00:00.000Z');
+const TARGET_DATE = new Date('2025-01-01T11:00:00.000Z');
 const TARGET_TIMESTAMP = TARGET_DATE.getTime(); // 01 Jan 2027, 18:00 UTC+7
 
 const formattedDate = TARGET_DATE.toLocaleDateString('en-GB', {

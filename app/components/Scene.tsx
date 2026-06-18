@@ -28,7 +28,7 @@ function Globe() {
 
   useFrame((state, delta) => {
     if (meshRef.current) {
-      meshRef.current.rotation.y += delta * 0.1;
+      meshRef.current.rotation.y += delta * 0.04;
     }
   });
 
@@ -59,8 +59,8 @@ function FloatingParticles() {
 
     useFrame((state, delta) => {
         if (ref.current) {
-            ref.current.rotation.x -= delta / 10;
-            ref.current.rotation.y -= delta / 15;
+            ref.current.rotation.x -= delta / 25;
+            ref.current.rotation.y -= delta / 40;
         }
     });
 

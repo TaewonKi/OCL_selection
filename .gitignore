@@ -45,3 +45,7 @@ next-env.d.ts
 QUICKSTART.md
 DEPLOYMENT.md
 
+
+# supabase
+supabase/.temp
+supabase/.branches

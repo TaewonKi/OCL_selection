@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
 import { Countdown } from "../components/Countdown";
+import { AirplaneSeatMap } from "../components/AirplaneSeatMap";
 
 interface City {
   city_id: string;
@@ -526,7 +527,6 @@ export default function RegisterPage() {
                         const isFull = city.remaining === 0;
                         const isLocked = isFull || !registrationOpen;
                         const isSelected = selectedCity === city.city_id;
-                        const filledPct = Math.min(100, (city.current_count / city.quota) * 100);
                         return (
                           <button
                             key={city.city_id}
@@ -545,27 +545,24 @@ export default function RegisterPage() {
                             `}
                           >
                             {/* Main body */}
-                            <div className="flex-1 p-5 sm:p-6">
-                              <div className="flex items-center justify-between mb-3">
-                                <span className="font-mono text-[0.6rem] tracking-[0.2em] uppercase text-ink-soft">
-                                  Destination
-                                </span>
-                                <span className="font-mono text-[0.6rem] tracking-[0.2em] uppercase text-ink-soft/70">
-                                  {gateCode(idx)}
-                                </span>
+                            <div className="flex-1 p-5 sm:p-6 flex items-center gap-4 sm:gap-5">
+                              <div className="min-w-0 flex-1">
+                                <p className="font-mono text-[0.6rem] tracking-[0.2em] uppercase text-ink-soft mb-2">
+                                  Destination · {gateCode(idx)}
+                                </p>
+                                <h3 className={`font-serif text-2xl sm:text-3xl font-semibold mb-3 ${isSelected ? "text-brass" : "text-ink"}`}>
+                                  {city.name}
+                                </h3>
+                                <p className="font-mono text-[0.65rem] tracking-[0.1em] uppercase text-ink-soft tabular-nums">
+                                  {city.current_count} / {city.quota} seats taken
+                                </p>
                               </div>
-                              <h3 className={`font-serif text-2xl sm:text-3xl font-semibold mb-4 ${isSelected ? "text-brass" : "text-ink"}`}>
-                                {city.name}
-                              </h3>
-                              <div className="h-1.5 w-full rounded-full bg-ink/10 overflow-hidden">
-                                <div
-                                  className={`h-full rounded-full transition-all duration-500 ${isSelected ? "bg-brass" : "bg-ink/30"}`}
-                                  style={{ width: `${filledPct}%` }}
-                                />
-                              </div>
-                              <p className="mt-2 font-mono text-[0.65rem] tracking-[0.1em] uppercase text-ink-soft tabular-nums">
-                                {city.current_count} / {city.quota} seats taken
-                              </p>
+                              <AirplaneSeatMap
+                                total={city.quota}
+                                taken={city.current_count}
+                                variant={isFull ? "full" : isSelected ? "selected" : "available"}
+                                className="w-[108px] sm:w-[128px] shrink-0 h-auto"
+                              />
                             </div>
 
                             {/* Tear-off stub */}

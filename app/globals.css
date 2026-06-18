@@ -1,8 +1,23 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fbfaf6;
+  --foreground: #0e2a47;
+}
+
+/* Design tokens — passport / boarding-pass identity for the OCL programme.
+   Registered as Tailwind theme colors so `bg-ink`, `text-brass`, `border-line`,
+   and opacity modifiers like `bg-ink/10` all work. */
+@theme {
+  --color-paper: #fbfaf6;
+  --color-ink: #0e2a47;
+  --color-ink-soft: #51617a;
+  --color-line: #e6dfcd;
+  --color-brass: #b0832a;
+  --color-brass-soft: #c9a24b;
+  --color-board: #0b1a2e;
+  --color-stamp: #15736b;
+  --color-oxblood: #94372b;
 }
 
 @theme inline {
@@ -10,68 +25,109 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-serif: var(--font-fraunces);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
 
-@keyframes scale-in {
-  from {
+/* Security-paper crosshatch — a faint guilloché cue for hero and ticket stubs. */
+.bg-security {
+  background-image: repeating-linear-gradient(
+      45deg,
+      color-mix(in srgb, var(--color-ink) 6%, transparent) 0 1px,
+      transparent 1px 7px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      color-mix(in srgb, var(--color-ink) 4%, transparent) 0 1px,
+      transparent 1px 9px
+    );
+}
+
+/* Departure-board surface sheen. */
+.board-sheen {
+  position: relative;
+}
+.board-sheen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), transparent 42%);
+  pointer-events: none;
+}
+
+/* Split-flap seam across a board digit tile. */
+.flap {
+  position: relative;
+}
+.flap::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  transform: translateY(-0.5px);
+  background: rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+
+/* Boarding-pass stub: dashed tear line on its left edge with punched notches. */
+.stub {
+  position: relative;
+}
+.stub::before,
+.stub::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  background: var(--color-paper);
+  transform: translate(-50%, -50%);
+}
+.stub::before {
+  top: 0;
+}
+.stub::after {
+  top: 100%;
+}
+
+/* Foil/ink stamp — colour is driven by the element's text color. */
+.stamp {
+  font-family: var(--font-geist-mono), monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-weight: 700;
+  font-size: 0.7rem;
+  line-height: 1;
+  border: 2px solid currentColor;
+  border-radius: 0.5rem;
+  padding: 0.3rem 0.6rem;
+  display: inline-block;
+  transform: rotate(-7deg);
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+.stamp-in {
+  animation: stamp-press 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes stamp-press {
+  0% {
     opacity: 0;
-    transform: scale(0.9);
+    transform: rotate(-7deg) scale(1.35);
   }
-  to {
+  60% {
     opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes blob {
-  0% {
-    transform: translate(0px, 0px) scale(1);
-  }
-  33% {
-    transform: translate(30px, -50px) scale(1.1);
-  }
-  66% {
-    transform: translate(-20px, 20px) scale(0.9);
   }
   100% {
-    transform: translate(0px, 0px) scale(1);
-  }
-}
-
-.animate-blob {
-  animation: blob 7s infinite;
-}
-
-/* Animated, glowing gradient title */
-@keyframes gradient-shift {
-  0% {
-    background-position: 0% center;
-  }
-  100% {
-    background-position: 200% center;
-  }
-}
-
-@keyframes title-glow {
-  0%,
-  100% {
-    filter: drop-shadow(0 0 6px rgba(37, 99, 235, 0.3));
-  }
-  50% {
-    filter: drop-shadow(0 0 20px rgba(99, 102, 241, 0.6));
+    opacity: 1;
+    transform: rotate(-7deg) scale(1);
   }
 }
 
@@ -81,45 +137,31 @@ body {
     transform: translateY(0);
   }
   50% {
-    transform: translateY(-8px);
+    transform: translateY(-6px);
   }
 }
-
-.animated-gradient-text {
-  background-image: linear-gradient(
-    90deg,
-    #2563eb,
-    #6366f1,
-    #818cf8,
-    #6366f1,
-    #2563eb
-  );
-  background-size: 200% auto;
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
-  animation: gradient-shift 6s linear infinite,
-    title-glow 3.5s ease-in-out infinite;
+.title-float {
+  animation: title-float 6s ease-in-out infinite;
 }
 
-.title-float {
-  animation: title-float 5s ease-in-out infinite;
+/* Slow blink for the live "gate" indicator dot. */
+@keyframes gate-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+.gate-pulse {
+  animation: gate-pulse 2s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animated-gradient-text {
-    animation: title-glow 3.5s ease-in-out infinite;
-  }
-  .title-float {
+  .title-float,
+  .gate-pulse,
+  .stamp-in {
     animation: none;
   }
-}
-
-.animation-delay-2000 {
-  animation-delay: 2s;
-}
-
-.animation-delay-4000 {
-  animation-delay: 4s;
 }

@@ -8,40 +8,48 @@ import Scene from "./components/Scene";
 
 export default function LandingPage() {
   const [registrationOpen, setRegistrationOpen] = useState(false);
+
   return (
-    <div className="relative min-h-screen text-slate-900 overflow-hidden flex flex-col">
+    <div className="relative min-h-screen text-ink overflow-hidden flex flex-col">
       {/* Animated 3D background */}
       <Scene />
-      {/* Soft gradient wash so the globe stays subtle behind the content */}
-      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-blue-50/70 via-white/60 to-blue-50/70" />
-      {/* Hero Section */}
+      {/* Paper wash + concourse texture so the globe stays a quiet backdrop */}
+      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-paper/75 via-paper/55 to-paper/80" />
+      <div className="absolute inset-0 -z-10 bg-security opacity-[0.35]" aria-hidden="true" />
+
       <div className="flex-grow flex items-center justify-center z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center py-20">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center py-16 sm:py-20">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
           >
-            <span className="inline-block py-1 px-3 rounded-full bg-blue-100 text-blue-700 text-sm font-semibold mb-6 tracking-wide uppercase">
-              Explore The World
-            </span>
-            <h1 className="title-float text-5xl sm:text-6xl lg:text-8xl font-extrabold mb-8 tracking-tight text-slate-900">
-              Outside Classroom <br />
-              <span className="animated-gradient-text">
-                Learning 2027
+            {/* Passport line eyebrow */}
+            <div className="flex items-center justify-center gap-3 mb-7">
+              <span className="hidden sm:block h-px w-8 bg-brass/50" aria-hidden="true" />
+              <span className="font-mono text-[0.6rem] sm:text-xs tracking-[0.25em] text-brass uppercase">
+                International Program · Est. 2027
               </span>
+              <span className="hidden sm:block h-px w-8 bg-brass/50" aria-hidden="true" />
+            </div>
+
+            <h1 className="title-float font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold leading-[0.95] tracking-tight text-ink mb-7">
+              Outside Classroom
+              <br />
+              <span className="italic text-brass">Learning 2027</span>
             </h1>
           </motion.div>
-          
-          <motion.p 
+
+          <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-            className="text-xl sm:text-2xl text-slate-600 max-w-3xl mx-auto font-medium leading-relaxed mb-12"
+            className="text-lg sm:text-xl text-ink-soft max-w-2xl mx-auto leading-relaxed mb-12"
           >
-            Expand your horizons beyond the classroom. Choose your destination and embark on an unforgettable journey of discovery.
+            Twelve cities. One term abroad. Choose a destination, claim your seat,
+            and learn the world first-hand alongside your year group.
           </motion.p>
-          
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -50,57 +58,55 @@ export default function LandingPage() {
           >
             <Countdown className="mx-auto max-w-2xl" onAvailabilityChange={setRegistrationOpen} />
           </motion.div>
-          
+
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4"
+            className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4"
           >
             {registrationOpen ? (
-              <Link 
+              <Link
                 href="/register"
-                className="group relative inline-flex items-center justify-center px-8 py-4 font-bold text-white transition-all duration-200 bg-blue-600 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 hover:bg-blue-700 active:scale-95 shadow-lg hover:shadow-2xl animate-pulse hover:animate-none"
-                style={{
-                  boxShadow: '0 0 20px rgba(59, 130, 246, 0.5), 0 0 40px rgba(59, 130, 246, 0.3), 0 0 60px rgba(59, 130, 246, 0.2)'
-                }}
+                className="group inline-flex items-center justify-center gap-2 px-7 py-4 font-semibold text-paper bg-ink rounded-xl shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
               >
-                <span className="relative text-lg">Start Registration</span>
-                <svg className="relative w-5 h-5 ml-2 transition-transform duration-200 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                <span>Claim your seat</span>
+                <svg className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
               </Link>
             ) : (
-              <button 
+              <button
                 disabled
-                className="relative inline-flex items-center justify-center px-8 py-4 font-bold text-slate-400 transition-all duration-200 bg-slate-100 rounded-full cursor-not-allowed opacity-60"
+                aria-disabled="true"
+                className="inline-flex items-center justify-center gap-2 px-7 py-4 font-semibold text-ink/40 bg-ink/5 border border-line rounded-xl cursor-not-allowed"
               >
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
-                <span className="relative text-lg">Registration Opens Soon</span>
+                <span>Boarding not yet open</span>
               </button>
             )}
-            
-            <Link 
+
+            <Link
               href="/check"
-              className="inline-flex items-center justify-center px-8 py-4 font-bold text-slate-700 transition-all duration-200 bg-white border border-slate-200 rounded-full hover:bg-slate-50 hover:text-blue-600 hover:border-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-200 active:scale-95 shadow-sm"
+              className="inline-flex items-center justify-center px-7 py-4 font-semibold text-ink bg-paper/70 border border-ink/15 rounded-xl transition-all duration-200 hover:bg-ink/5 active:scale-[0.99] focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/30 focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
             >
-              Check Registration
+              Check my booking
             </Link>
-            
-            <Link 
+
+            <Link
               href="/teacher"
-              className="inline-flex items-center justify-center px-8 py-4 font-bold text-slate-700 transition-all duration-200 bg-white border border-slate-200 rounded-full hover:bg-slate-50 hover:text-blue-600 hover:border-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-200 active:scale-95 shadow-sm"
+              className="inline-flex items-center justify-center px-7 py-4 font-semibold text-ink bg-paper/70 border border-ink/15 rounded-xl transition-all duration-200 hover:bg-ink/5 active:scale-[0.99] focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/30 focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
             >
-              Teacher Portal
+              Portal
             </Link>
           </motion.div>
         </div>
       </div>
-      
-      <footer className="relative z-10 py-6 text-center text-slate-500 text-sm">
-        © {new Date().getFullYear()} OCL Selection. All rights reserved.
+
+      <footer className="relative z-10 py-6 text-center font-mono text-[0.65rem] tracking-[0.2em] text-ink-soft/70 uppercase">
+        © {new Date().getFullYear()} Outside Classroom Learning
       </footer>
     </div>
   );

@@ -19,7 +19,8 @@ export default function CheckRegistrationPage() {
   const [registrationData, setRegistrationData] = useState<RegistrationData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const homeButtonClasses = "inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-700 border border-slate-200 rounded-full hover:bg-slate-50 hover:text-blue-600 transition-all shadow-sm";
+  const homeButtonClasses =
+    "inline-flex items-center gap-2 px-4 py-2 text-xs font-mono tracking-[0.15em] uppercase text-ink-soft border border-ink/15 rounded-lg hover:bg-ink/5 hover:text-ink transition-all";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +37,7 @@ export default function CheckRegistrationPage() {
     try {
       const functionsUrl = process.env.NEXT_PUBLIC_SUPABASE_FUNCTIONS_URL;
       const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-      
+
       const response = await fetch(`${functionsUrl}/check-registration`, {
         method: "POST",
         headers: {
@@ -62,23 +63,12 @@ export default function CheckRegistrationPage() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 via-white to-blue-50 text-slate-900">
+    <div className="min-h-screen bg-paper text-ink">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        <div className="flex justify-end mb-6">
+        <div className="flex justify-end mb-8">
           <Link href="/" className={homeButtonClasses}>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0h6" />
             </svg>
             Home
@@ -90,23 +80,23 @@ export default function CheckRegistrationPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <div className="mb-8 sm:mb-12 text-center">
-            <span className="inline-block py-1 px-3 rounded-full bg-blue-100 text-blue-700 text-sm font-semibold mb-4 tracking-wide uppercase">
-              Registration Check
-            </span>
-            <h1 className="text-3xl sm:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight">
-              Check Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Registration</span>
+          <div className="mb-8 sm:mb-10 text-center">
+            <p className="font-mono text-xs tracking-[0.25em] uppercase text-brass mb-4">
+              Booking lookup
+            </p>
+            <h1 className="font-serif text-4xl sm:text-5xl font-semibold text-ink mb-3 tracking-tight">
+              Find your booking
             </h1>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              Enter your Student ID to view your trip registration details
+            <p className="text-lg text-ink-soft max-w-2xl mx-auto">
+              Enter your Student ID to pull up your destination and seat details.
             </p>
           </div>
 
-          {/* Search Form */}
-          <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 lg:p-10 shadow-sm mb-8">
+          {/* Lookup form */}
+          <div className="bg-white border border-line rounded-3xl p-6 sm:p-8 lg:p-10 shadow-sm mb-8">
             <form onSubmit={handleSubmit} className="max-w-md mx-auto">
               <div className="mb-6">
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                <label className="block font-mono text-[0.7rem] tracking-[0.15em] uppercase text-ink-soft mb-2">
                   Student ID
                 </label>
                 <input
@@ -120,7 +110,7 @@ export default function CheckRegistrationPage() {
                     const value = e.target.value.replace(/\D/g, '').slice(0, 5);
                     setStudentId(value);
                   }}
-                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900 transition-all text-base placeholder:text-slate-400"
+                  className="w-full px-4 py-3.5 bg-paper border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-ink/40 focus:border-transparent text-ink transition-all text-base font-mono tabular-nums placeholder:text-ink/30"
                   placeholder="12345"
                 />
               </div>
@@ -128,33 +118,31 @@ export default function CheckRegistrationPage() {
               <button
                 type="submit"
                 disabled={loading || studentId.length !== 5}
-                className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:bg-slate-200 disabled:text-slate-400 text-white font-bold py-4 px-6 rounded-full transition-all disabled:cursor-not-allowed text-lg shadow-lg hover:shadow-xl active:scale-[0.98]"
+                className="w-full bg-ink hover:bg-ink/90 active:scale-[0.99] disabled:bg-ink/15 disabled:text-ink/40 text-paper font-semibold py-4 px-6 rounded-xl transition-all disabled:cursor-not-allowed text-lg shadow-lg hover:shadow-xl"
               >
-                {loading ? "Checking..." : "Check Registration"}
+                {loading ? "Looking up…" : "Find booking"}
               </button>
             </form>
           </div>
 
-          {/* Error Message */}
+          {/* Error */}
           <AnimatePresence>
             {error && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="bg-red-50 border border-red-200 rounded-2xl p-6 mb-8"
+                className="bg-oxblood/5 border border-oxblood/20 rounded-2xl p-6 mb-8"
               >
                 <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                    <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex-shrink-0 w-10 h-10 bg-oxblood/10 rounded-full flex items-center justify-center text-oxblood">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-red-900 mb-1">
-                      Not Found
-                    </h3>
-                    <p className="text-red-700">
+                    <p className="font-mono text-[0.65rem] tracking-[0.2em] uppercase text-oxblood mb-1">Not found</p>
+                    <p className="text-ink-soft">
                       {error}
                     </p>
                   </div>
@@ -163,81 +151,70 @@ export default function CheckRegistrationPage() {
             )}
           </AnimatePresence>
 
-          {/* Registration Details */}
+          {/* Result */}
           <AnimatePresence>
             {registrationData && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 lg:p-10 shadow-sm"
+                className="bg-white border border-stamp/30 rounded-3xl shadow-xl overflow-hidden"
               >
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="flex-shrink-0 w-16 h-16 bg-green-50 rounded-full flex items-center justify-center border-4 border-green-100">
-                    <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-slate-900">Registration Found!</h2>
-                    <p className="text-slate-600">Your trip details are confirmed</p>
-                  </div>
+                <div className="bg-stamp text-paper px-6 sm:px-8 py-4 flex items-center justify-between">
+                  <span className="font-mono text-[0.65rem] sm:text-xs tracking-[0.25em] uppercase text-paper/90">
+                    Booking confirmed
+                  </span>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
                 </div>
 
-                <div className="bg-slate-50 rounded-2xl p-6 sm:p-8 space-y-4 border border-slate-100">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm font-semibold text-slate-500 mb-1 uppercase tracking-wide">Student ID</p>
-                      <p className="text-lg font-bold text-slate-900">{registrationData.student_id}</p>
-                    </div>
-                    
-                    <div>
-                      <p className="text-sm font-semibold text-slate-500 mb-1 uppercase tracking-wide">Name</p>
-                      <p className="text-lg font-bold text-slate-900">{registrationData.name} {registrationData.surname}</p>
-                    </div>
-                    
-                    <div>
-                      <p className="text-sm font-semibold text-slate-500 mb-1 uppercase tracking-wide">Class</p>
-                      <p className="text-lg font-bold text-slate-900">{registrationData.class}</p>
-                    </div>
-                    
-                    <div>
-                      <p className="text-sm font-semibold text-slate-500 mb-1 uppercase tracking-wide">Class Number</p>
-                      <p className="text-lg font-bold text-slate-900">{registrationData.class_no || "N/A"}</p>
-                    </div>
+                <div className="p-6 sm:p-10">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-y-6 gap-x-4 bg-paper rounded-2xl p-6 border border-line bg-security mb-6">
+                    <Field label="Student ID" value={registrationData.student_id} mono />
+                    <Field label="Passenger" value={`${registrationData.name} ${registrationData.surname}`} />
+                    <Field label="Class" value={registrationData.class} mono />
+                    <Field label="Seat no." value={registrationData.class_no || "—"} mono />
                   </div>
 
-                  <div className="pt-4 mt-4 border-t border-slate-200">
-                    <p className="text-sm font-semibold text-slate-500 mb-2 uppercase tracking-wide">Trip Destination</p>
-                    <p className="text-2xl font-bold text-blue-600 mb-4">{registrationData.city}</p>
+                  <div className="mb-6">
+                    <p className="font-mono text-[0.65rem] tracking-[0.2em] uppercase text-ink-soft mb-1">Destination</p>
+                    <p className="font-serif text-3xl font-semibold text-stamp">{registrationData.city}</p>
                   </div>
-                </div>
 
-                <div className="mt-6 p-4 bg-blue-50 border border-blue-100 rounded-xl">
-                  <div className="flex gap-3">
-                    <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="p-4 bg-brass/5 border border-brass/20 rounded-xl flex gap-3">
+                    <svg className="w-5 h-5 text-brass flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <p className="text-sm text-blue-900">
-                      Please save this information for your records. For any changes or questions, contact your teacher.
+                    <p className="text-sm text-ink-soft">
+                      Keep this for your records. For any changes, speak to your teacher.
                     </p>
                   </div>
-                </div>
 
-                <button
-                  onClick={() => {
-                    setRegistrationData(null);
-                    setStudentId("");
-                  }}
-                  className="w-full mt-6 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-4 rounded-full transition-all"
-                >
-                  Check Another Registration
-                </button>
+                  <button
+                    onClick={() => {
+                      setRegistrationData(null);
+                      setStudentId("");
+                    }}
+                    className="w-full mt-6 bg-white border border-ink/15 hover:bg-ink/5 text-ink font-semibold py-4 rounded-xl transition-all"
+                  >
+                    Look up another booking
+                  </button>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
         </motion.div>
       </div>
+    </div>
+  );
+}
+
+function Field({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+  return (
+    <div>
+      <p className="font-mono text-[0.6rem] tracking-[0.2em] uppercase text-ink-soft mb-1">{label}</p>
+      <p className={`text-lg font-semibold text-ink ${mono ? "font-mono tabular-nums" : ""}`}>{value}</p>
     </div>
   );
 }

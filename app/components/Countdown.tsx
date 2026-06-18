@@ -1,16 +1,26 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { useServerTime } from '../hooks/useServerTime';
+
+const noopSubscribe = () => () => {};
+// Resolves to false during SSR and the hydration pass, then true once mounted —
+// avoids a time-based hydration mismatch without a setState-in-effect.
+const useIsClient = () =>
+  useSyncExternalStore(
+    noopSubscribe,
+    () => true,
+    () => false
+  );
 
 const TARGET_DATE = new Date('2027-01-01T11:00:00.000Z');
 const TARGET_TIMESTAMP = TARGET_DATE.getTime(); // 01 Jan 2027, 18:00 UTC+7
 
 const formattedDate = TARGET_DATE.toLocaleDateString('en-GB', {
-  day: 'numeric',
+  day: '2-digit',
   month: 'short',
   year: 'numeric',
-});
+}).toUpperCase();
 
 
 const REFRESH_INTERVAL_MS = 250;
@@ -34,15 +44,19 @@ const humanize = (msRemaining: number) => {
   return { days, hours, minutes, seconds };
 };
 
-// Displays a countdown that is anchored to server time instead of the client clock.
+const boardClasses = (className?: string) =>
+  [
+    'board-sheen relative overflow-hidden rounded-3xl bg-board text-paper shadow-xl ring-1 ring-ink/40',
+    className,
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+// Departure board anchored to server time rather than the client clock.
 export function Countdown({ className, onAvailabilityChange }: CountdownProps) {
   const { now, isSynced, syncState } = useServerTime({ resyncIntervalMs: 45_000 });
   const [remaining, setRemaining] = useState(() => Math.max(0, TARGET_TIMESTAMP - Date.now()));
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  const isClient = useIsClient();
 
   useEffect(() => {
     let timer: number;
@@ -68,61 +82,66 @@ export function Countdown({ className, onAvailabilityChange }: CountdownProps) {
 
   if (!isClient) {
     return (
-      <div
-        className={['relative overflow-hidden rounded-3xl bg-white border border-slate-200 shadow-sm', className]
-          .filter(Boolean)
-          .join(' ')}
-      >
-        <div className="text-center py-10 sm:py-12 px-6">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-100 text-slate-600 text-sm font-semibold mb-8 border border-slate-200">
-            <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            Loading...
-          </div>
+      <div className={boardClasses(className)}>
+        <div className="px-6 py-10 sm:py-12 text-center">
+          <span className="font-mono text-xs tracking-[0.25em] text-paper/60 uppercase">
+            Departure board · syncing
+          </span>
         </div>
       </div>
     );
   }
 
   return (
-    <div
-      className={['relative overflow-hidden rounded-3xl bg-white border border-slate-200 shadow-sm', className]
-        .filter(Boolean)
-        .join(' ')}
-    >
-      <div className="text-center py-10 sm:py-12 px-6">
+    <div className={boardClasses(className)}>
+      <div className="px-5 sm:px-8 py-7 sm:py-9">
+        {/* Board header */}
+        <div className="flex items-center justify-between gap-4 pb-6 mb-7 border-b border-paper/15">
+          <div className="flex items-center gap-2.5">
+            <span
+              className={`h-2 w-2 rounded-full ${unlocked ? 'bg-stamp' : 'bg-brass-soft gate-pulse'}`}
+              aria-hidden="true"
+            />
+            <span className="font-mono text-[0.65rem] sm:text-xs tracking-[0.25em] text-paper/70 uppercase">
+              {unlocked ? 'Now boarding' : 'Next departure'}
+            </span>
+          </div>
+          <span className="font-mono text-[0.65rem] sm:text-xs tracking-[0.25em] text-paper/50 uppercase">
+            Gate · OCL 2027
+          </span>
+        </div>
+
         {!unlocked && (
           <>
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 text-blue-700 text-sm font-semibold mb-8 border border-blue-100">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Registration Opens In
-            </div>
-            <div className="flex items-start justify-center gap-2 sm:gap-3 lg:gap-4 mb-8">
-              <TimeBlock label="Days" value={days.toString()} />
+            <p className="font-mono text-[0.65rem] tracking-[0.3em] text-brass-soft uppercase text-center mb-5">
+              Registration departs in
+            </p>
+            <div className="flex items-stretch justify-center gap-2 sm:gap-3">
+              <TimeBlock label="Days" value={pad(days)} />
+              <Colon />
               <TimeBlock label="Hours" value={pad(hours)} />
+              <Colon />
               <TimeBlock label="Minutes" value={pad(minutes)} />
+              <Colon />
               <TimeBlock label="Seconds" value={pad(seconds)} />
             </div>
           </>
         )}
 
         {unlocked && (
-          <div className="py-6">
-            <div className="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 bg-emerald-50 rounded-full mb-4 border-4 border-emerald-100">
-              <svg className="w-10 h-10 sm:w-12 sm:h-12 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <p className="text-2xl sm:text-3xl font-bold text-emerald-600 mb-2">Registration Open!</p>
-            <p className="text-base text-slate-600">You can now submit your application</p>
+          <div className="py-3 text-center">
+            <p className="font-serif text-3xl sm:text-4xl font-semibold text-paper mb-2">
+              Now boarding
+            </p>
+            <p className="text-sm text-paper/70">
+              Registration is open — claim your seat.
+            </p>
           </div>
         )}
 
-        <div className="flex items-center justify-center gap-2 text-sm text-slate-500 pt-6 border-t border-slate-100">
-          <span>Open in {formattedDate}</span>
+        {/* Board footer */}
+        <div className="mt-7 pt-5 border-t border-paper/15 flex items-center justify-center gap-2 font-mono text-[0.65rem] sm:text-xs tracking-[0.2em] text-paper/55 uppercase">
+          <span>Scheduled · {formattedDate}</span>
           <StatusBar unlocked={unlocked} isSynced={isSynced} rttMs={syncState?.rttMs} />
         </div>
       </div>
@@ -138,15 +157,26 @@ type TimeBlockProps = {
 function TimeBlock({ label, value }: TimeBlockProps) {
   return (
     <div className="flex flex-col items-center">
-      <div className="bg-slate-50 rounded-2xl px-4 sm:px-6 py-5 sm:py-7 border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-200 transition-all min-w-[70px] sm:min-w-[90px] lg:min-w-[110px]">
-        <div className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 leading-none tabular-nums">
+      <div className="flap rounded-xl bg-black/35 ring-1 ring-paper/10 px-3 sm:px-5 py-4 sm:py-5 min-w-[58px] sm:min-w-[84px]">
+        <div className="font-mono text-3xl sm:text-5xl font-semibold text-paper leading-none tabular-nums">
           {value}
         </div>
       </div>
-      <div className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-slate-500 mt-3">
+      <div className="mt-2.5 font-mono text-[0.6rem] sm:text-[0.65rem] tracking-[0.2em] uppercase text-paper/50">
         {label}
       </div>
     </div>
+  );
+}
+
+function Colon() {
+  return (
+    <span
+      className="self-start mt-3 sm:mt-4 font-mono text-2xl sm:text-4xl text-brass-soft/70 leading-none"
+      aria-hidden="true"
+    >
+      :
+    </span>
   );
 }
 
@@ -156,7 +186,7 @@ type StatusBarProps = {
   rttMs?: number;
 };
 
-function StatusBar({ unlocked, isSynced, rttMs }: StatusBarProps) {
+function StatusBar({ unlocked, isSynced }: StatusBarProps) {
   if (unlocked) {
     return null;
   }
@@ -164,9 +194,11 @@ function StatusBar({ unlocked, isSynced, rttMs }: StatusBarProps) {
   if (!isSynced) {
     return (
       <>
-        <span className="text-slate-300">•</span>
-        <span className="text-amber-600">Syncing…</span>
+        <span className="text-paper/30">•</span>
+        <span className="text-brass-soft">Syncing…</span>
       </>
     );
   }
+
+  return null;
 }

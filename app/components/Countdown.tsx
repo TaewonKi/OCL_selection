@@ -3,7 +3,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useServerTime } from '../hooks/useServerTime';
 
-const TARGET_TIMESTAMP = Date.parse('2025-12-15T11:00:00.000Z'); // 15 Dec 2025, 18:00 UTC+7
+const TARGET_DATE = new Date('2027-01-01T11:00:00.000Z');
+const TARGET_TIMESTAMP = TARGET_DATE.getTime(); // 01 Jan 2027, 18:00 UTC+7
+
+const formattedDate = TARGET_DATE.toLocaleDateString('en-GB', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+});
+
+
 const REFRESH_INTERVAL_MS = 250;
 
 type CountdownProps = {
@@ -113,7 +122,7 @@ export function Countdown({ className, onAvailabilityChange }: CountdownProps) {
         )}
 
         <div className="flex items-center justify-center gap-2 text-sm text-slate-500 pt-6 border-t border-slate-100">
-          <span>15 Dec 2025, 6:00 PM UTC+7</span>
+          <span>Open in {formattedDate}</span>
           <StatusBar unlocked={unlocked} isSynced={isSynced} rttMs={syncState?.rttMs} />
         </div>
       </div>
@@ -160,14 +169,4 @@ function StatusBar({ unlocked, isSynced, rttMs }: StatusBarProps) {
       </>
     );
   }
-
-  return (
-    <>
-      <span className="text-slate-300">•</span>
-      <span className="flex items-center gap-1.5 text-emerald-600">
-        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-        Live
-      </span>
-    </>
-  );
 }

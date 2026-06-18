@@ -23,7 +23,7 @@ export default function LandingPage() {
             <h1 className="text-5xl sm:text-6xl lg:text-8xl font-extrabold mb-8 tracking-tight text-slate-900">
               Outside Classroom <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
-                Learning 2026
+                Learning 2027
               </span>
             </h1>
           </motion.div>
@@ -95,7 +95,7 @@ export default function LandingPage() {
       </div>
       
       <footer className="relative z-10 py-6 text-center text-slate-500 text-sm">
-        © 2025 OCL Selection. All rights reserved.
+        © {new Date().getFullYear()} OCL Selection. All rights reserved.
       </footer>
     </div>
   );

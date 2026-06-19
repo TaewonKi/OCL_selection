@@ -10,4 +10,4 @@ insert into cities (name, quota) values
   ('Bangkok', 50),
   ('Chiang Mai', 40),
   ('Phuket', 35),
-  ('Pattaya', 45);
+  ('Udon Thani', 45);

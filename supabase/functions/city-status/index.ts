@@ -22,7 +22,7 @@ serve(async (req) => {
     // Get all cities
     const { data: cities, error: citiesError } = await supabaseClient
       .from("cities")
-      .select("id, name, quota")
+      .select("id, name, quota, pin_province")
       .order("name");
 
     if (citiesError) {
@@ -43,6 +43,7 @@ serve(async (req) => {
             city_id: city.id,
             name: city.name,
             quota: city.quota,
+            pin_province: city.pin_province ?? null,
             current_count: 0,
             remaining: city.quota,
           };
@@ -53,6 +54,7 @@ serve(async (req) => {
           city_id: city.id,
           name: city.name,
           quota: city.quota,
+          pin_province: city.pin_province ?? null,
           current_count: currentCount,
           remaining: Math.max(0, city.quota - currentCount),
         };

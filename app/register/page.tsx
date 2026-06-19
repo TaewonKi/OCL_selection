@@ -14,6 +14,7 @@ interface City {
   quota: number;
   current_count: number;
   remaining: number;
+  pin_province?: string | null;
 }
 
 interface FormData {
@@ -29,6 +30,7 @@ const gateCode = (index: number) => `GATE ${(index + 1).toString().padStart(2, "
 export default function RegisterPage() {
   const [cities, setCities] = useState<City[]>([]);
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
+  const [step, setStep] = useState<1 | 2>(1);
   const [formData, setFormData] = useState<FormData>({
     student_id: "",
     name: "",
@@ -49,7 +51,6 @@ export default function RegisterPage() {
   const homeButtonClasses =
     "inline-flex items-center gap-2 px-4 py-2 text-xs font-mono tracking-[0.15em] uppercase text-ink-soft border border-ink/15 rounded-lg hover:bg-ink/5 hover:text-ink transition-all";
 
-  // Auto-hide error popup after 5 seconds
   useEffect(() => {
     if (showErrorPopup) {
       const timer = setTimeout(() => {
@@ -60,7 +61,6 @@ export default function RegisterPage() {
     }
   }, [showErrorPopup]);
 
-  // Fetch city status
   const fetchCityStatus = async () => {
     try {
       const functionsUrl = process.env.NEXT_PUBLIC_SUPABASE_FUNCTIONS_URL;
@@ -78,7 +78,6 @@ export default function RegisterPage() {
     }
   };
 
-  // Subscribe to real-time updates
   useEffect(() => {
     fetchCityStatus();
 
@@ -98,26 +97,27 @@ export default function RegisterPage() {
     };
   }, []);
 
-  // Handle form submission - show confirmation
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Step 1 → 2: validate passenger details then reveal map
+  const handleContinue = (e: React.FormEvent) => {
     e.preventDefault();
-
     if (formData.student_id.length !== 5) {
       setMessage({ type: "error", text: "Student ID must be exactly 5 digits" });
       setShowErrorPopup(true);
       return;
     }
+    setStep(2);
+  };
 
+  // Step 2 submit → show confirmation
+  const handleSubmit = () => {
     if (!selectedCity) {
-      setMessage({ type: "error", text: "Please select a city" });
+      setMessage({ type: "error", text: "Please select a destination" });
       setShowErrorPopup(true);
       return;
     }
-
     setShowConfirmation(true);
   };
 
-  // Handle actual registration after confirmation
   const confirmRegistration = async () => {
     setLoading(true);
     setMessage(null);
@@ -187,18 +187,10 @@ export default function RegisterPage() {
                 </div>
                 <div className="flex-1">
                   <p className="font-mono text-[0.65rem] tracking-[0.2em] uppercase text-oxblood mb-1">Denied</p>
-                  <h3 className="text-lg font-semibold text-ink mb-2">
-                    We couldn&apos;t book that seat
-                  </h3>
-                  <p className="text-ink-soft mb-6">
-                    {message.text}
-                  </p>
+                  <h3 className="text-lg font-semibold text-ink mb-2">We couldn&apos;t book that seat</h3>
+                  <p className="text-ink-soft mb-6">{message.text}</p>
                   <button
-                    onClick={() => {
-                      setShowErrorPopup(false);
-                      setMessage(null);
-                      fetchCityStatus();
-                    }}
+                    onClick={() => { setShowErrorPopup(false); setMessage(null); }}
                     className="w-full bg-oxblood hover:bg-oxblood/90 text-white font-semibold py-3 rounded-xl transition-colors"
                   >
                     Try again
@@ -211,6 +203,8 @@ export default function RegisterPage() {
       </AnimatePresence>
 
       <AnimatePresence mode="wait">
+
+        {/* ── Confirmation ── */}
         {showConfirmation ? (
           <motion.div
             key="confirmation"
@@ -231,7 +225,6 @@ export default function RegisterPage() {
                 </Link>
               </div>
 
-              {/* Boarding pass preview */}
               <div className="bg-white border border-line rounded-3xl shadow-xl overflow-hidden">
                 <div className="bg-board text-paper px-6 sm:px-8 py-4 flex items-center justify-between">
                   <span className="font-mono text-[0.65rem] sm:text-xs tracking-[0.25em] uppercase text-paper/80">
@@ -282,7 +275,10 @@ export default function RegisterPage() {
               </div>
             </div>
           </motion.div>
+
         ) : registrationSuccess ? (
+
+          /* ── Success ── */
           <motion.div
             key="success"
             initial={{ opacity: 0, y: 20 }}
@@ -313,9 +309,7 @@ export default function RegisterPage() {
                 </div>
 
                 <div className="p-6 sm:p-10">
-                  <h1 className="font-serif text-3xl sm:text-4xl font-semibold text-ink mb-2">
-                    You&apos;re booked.
-                  </h1>
+                  <h1 className="font-serif text-3xl sm:text-4xl font-semibold text-ink mb-2">You&apos;re booked.</h1>
                   <p className="text-ink-soft mb-8">Keep this for your records — show it to your teacher if asked.</p>
 
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-y-6 gap-x-4 bg-paper rounded-2xl p-6 border border-line bg-security mb-6">
@@ -335,16 +329,10 @@ export default function RegisterPage() {
                   <button
                     onClick={() => {
                       setRegistrationSuccess(false);
-                      setFormData({
-                        student_id: "",
-                        name: "",
-                        surname: "",
-                        class: "",
-                        class_no: "",
-                      });
+                      setStep(1);
+                      setFormData({ student_id: "", name: "", surname: "", class: "", class_no: "" });
                       setSelectedCity(null);
                       setMessage(null);
-                      fetchCityStatus();
                     }}
                     className="w-full bg-ink hover:bg-ink/90 text-paper font-semibold py-4 rounded-xl transition-all"
                   >
@@ -354,7 +342,10 @@ export default function RegisterPage() {
               </div>
             </div>
           </motion.div>
+
         ) : (
+
+          /* ── Main flow (step 1 & 2) ── */
           <motion.div
             key="main"
             initial={{ opacity: 0, y: 20 }}
@@ -362,7 +353,7 @@ export default function RegisterPage() {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+            <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
               <div className="flex justify-end mb-8">
                 <Link href="/" className={homeButtonClasses}>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -372,211 +363,244 @@ export default function RegisterPage() {
                 </Link>
               </div>
 
-              <div className="mb-10 text-center sm:text-left">
+              <div className="mb-8 text-center">
                 <p className="font-mono text-xs tracking-[0.25em] uppercase text-brass mb-4">
-                  Boarding · Passenger details
+                  Boarding · OCL 2027
                 </p>
                 <h1 className="font-serif text-4xl sm:text-5xl font-semibold text-ink mb-3 tracking-tight">
                   Reserve your seat
                 </h1>
-                <p className="text-lg text-ink-soft max-w-2xl">
-                  Enter your details, choose a destination, and we&apos;ll issue your boarding pass.
+                <p className="text-lg text-ink-soft">
+                  Enter your details, then choose a destination.
                 </p>
               </div>
 
-              {/* Departure board */}
-              <div className="mb-10">
+              <div className="mb-8">
                 <Countdown onAvailabilityChange={setRegistrationOpen} />
               </div>
 
-              <div className="flex flex-col md:flex-row gap-8 lg:gap-10">
-                {/* Passenger details */}
-                <div className="flex-1">
-                  <div className="bg-white border border-line rounded-3xl p-6 sm:p-8 lg:p-10 sticky top-8 shadow-sm">
-                    <div className="flex items-center gap-3 mb-8">
-                      <span className="font-mono text-xs font-bold text-brass">01</span>
-                      <h2 className="font-serif text-2xl font-semibold text-ink">Passenger details</h2>
-                    </div>
+              <AnimatePresence mode="wait">
 
-                    <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
-                      <div>
-                        <label className="block font-mono text-[0.7rem] tracking-[0.15em] uppercase text-ink-soft mb-2">
-                          Student ID
-                        </label>
-                        <input
-                          type="tel"
-                          inputMode="numeric"
-                          pattern="[0-9]{5}"
-                          maxLength={5}
-                          required
-                          disabled={!registrationOpen}
-                          value={formData.student_id}
-                          onChange={(e) => {
-                            const value = e.target.value.replace(/\D/g, '').slice(0, 5);
-                            setFormData({ ...formData, student_id: value });
-                          }}
-                          className="w-full px-4 py-3.5 bg-paper border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-ink/40 focus:border-transparent text-ink transition-all text-base font-mono tabular-nums placeholder:text-ink/30 disabled:opacity-50 disabled:cursor-not-allowed"
-                          placeholder="12345"
-                        />
+                {/* ── Step 1: Passenger details ── */}
+                {step === 1 && (
+                  <motion.div
+                    key="step1"
+                    initial={{ opacity: 0, x: 30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -30 }}
+                    transition={{ duration: 0.25 }}
+                  >
+                    <div className="bg-white border border-line rounded-3xl p-6 sm:p-8 lg:p-10 shadow-sm">
+                      <div className="flex items-center gap-3 mb-8">
+                        <span className="font-mono text-xs font-bold text-brass">01</span>
+                        <h2 className="font-serif text-2xl font-semibold text-ink">Passenger details</h2>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
+                      <form onSubmit={handleContinue} className="space-y-5 sm:space-y-6">
                         <div>
                           <label className="block font-mono text-[0.7rem] tracking-[0.15em] uppercase text-ink-soft mb-2">
-                            First name
-                          </label>
-                          <input
-                            type="text"
-                            required
-                            disabled={!registrationOpen}
-                            value={formData.name}
-                            onChange={(e) =>
-                              setFormData({ ...formData, name: e.target.value })
-                            }
-                            className="w-full px-4 py-3.5 bg-paper border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-ink/40 focus:border-transparent text-ink transition-all text-base placeholder:text-ink/30 disabled:opacity-50 disabled:cursor-not-allowed"
-                            placeholder="Somchai"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block font-mono text-[0.7rem] tracking-[0.15em] uppercase text-ink-soft mb-2">
-                            Last name
-                          </label>
-                          <input
-                            type="text"
-                            required
-                            disabled={!registrationOpen}
-                            value={formData.surname}
-                            onChange={(e) =>
-                              setFormData({ ...formData, surname: e.target.value })
-                            }
-                            className="w-full px-4 py-3.5 bg-paper border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-ink/40 focus:border-transparent text-ink transition-all text-base placeholder:text-ink/30 disabled:opacity-50 disabled:cursor-not-allowed"
-                            placeholder="Rakna"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
-                        <div>
-                          <label className="block font-mono text-[0.7rem] tracking-[0.15em] uppercase text-ink-soft mb-2">
-                            Class
-                          </label>
-                          <div className="relative">
-                            <select
-                              required
-                              disabled={!registrationOpen}
-                              value={formData.class}
-                              onChange={(e) =>
-                                setFormData({ ...formData, class: e.target.value })
-                              }
-                              className="w-full px-4 py-3.5 bg-paper border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-ink/40 focus:border-transparent text-ink transition-all text-base appearance-none disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              <option value="" disabled>Select class</option>
-                              <option value="1/12">1/12</option>
-                              <option value="1/13">1/13</option>
-                              <option value="2/12">2/12</option>
-                              <option value="2/13">2/13</option>
-                              <option value="3/11">3/11</option>
-                              <option value="3/12">3/12</option>
-                              <option value="4/12">4/12</option>
-                              <option value="4/13">4/13</option>
-                              <option value="5/12">5/12</option>
-                              <option value="5/13">5/13</option>
-                              <option value="6/12">6/12</option>
-                              <option value="6/13">6/13</option>
-                            </select>
-                            <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-ink-soft">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                              </svg>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block font-mono text-[0.7rem] tracking-[0.15em] uppercase text-ink-soft mb-2">
-                            Class number
+                            Student ID
                           </label>
                           <input
                             type="tel"
                             inputMode="numeric"
-                            pattern="[0-9]*"
+                            pattern="[0-9]{5}"
+                            maxLength={5}
+                            required
                             disabled={!registrationOpen}
-                            value={formData.class_no}
-                            onChange={(e) =>
-                              setFormData({ ...formData, class_no: e.target.value })
-                            }
+                            value={formData.student_id}
+                            onChange={(e) => {
+                              const value = e.target.value.replace(/\D/g, "").slice(0, 5);
+                              setFormData({ ...formData, student_id: value });
+                            }}
                             className="w-full px-4 py-3.5 bg-paper border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-ink/40 focus:border-transparent text-ink transition-all text-base font-mono tabular-nums placeholder:text-ink/30 disabled:opacity-50 disabled:cursor-not-allowed"
-                            placeholder="33"
+                            placeholder="12345"
                           />
                         </div>
-                      </div>
-                    </form>
-                  </div>
-                </div>
 
-                {/* Destination selection */}
-                <div className="flex-1">
-                  <div className="bg-white border border-line rounded-3xl p-6 sm:p-8 lg:p-10 shadow-sm">
-                    <div className="flex items-center gap-3 mb-8">
-                      <span className="font-mono text-xs font-bold text-brass">02</span>
-                      <h2 className="font-serif text-2xl font-semibold text-ink">Choose your destination</h2>
-                    </div>
-
-                    <p className="font-mono text-[0.65rem] tracking-[0.1em] uppercase text-ink-soft mb-5">
-                      Tap a pin to choose where you&apos;ll fly.
-                    </p>
-
-                    <ThailandMap
-                      cities={cities}
-                      selectedCity={selectedCity}
-                      onSelect={setSelectedCity}
-                      registrationOpen={registrationOpen}
-                    />
-
-                    {/* Selected destination — its cabin */}
-                    <div className="mt-6 mb-8">
-                      {selectedCityData ? (
-                        <div className="relative flex items-center gap-4 sm:gap-5 rounded-2xl border border-brass/40 bg-brass/5 bg-security p-4 sm:p-5">
-                          <div className="min-w-0 flex-1">
-                            <p className="font-mono text-[0.6rem] tracking-[0.2em] uppercase text-ink-soft mb-1">
-                              {gateCode(selectedIndex)} · Your cabin
-                            </p>
-                            <h3 className="font-serif text-2xl sm:text-3xl font-semibold text-brass mb-1">
-                              {selectedCityData.name}
-                            </h3>
-                            <p className="font-mono text-[0.65rem] tracking-[0.1em] uppercase text-ink-soft tabular-nums">
-                              {selectedCityData.current_count} / {selectedCityData.quota} taken · {selectedCityData.remaining} left
-                            </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
+                          <div>
+                            <label className="block font-mono text-[0.7rem] tracking-[0.15em] uppercase text-ink-soft mb-2">
+                              First name
+                            </label>
+                            <input
+                              type="text"
+                              required
+                              disabled={!registrationOpen}
+                              value={formData.name}
+                              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                              className="w-full px-4 py-3.5 bg-paper border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-ink/40 focus:border-transparent text-ink transition-all text-base placeholder:text-ink/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                              placeholder="Somchai"
+                            />
                           </div>
-                          <AirplaneSeatMap
-                            total={selectedCityData.quota}
-                            taken={selectedCityData.current_count}
-                            variant="selected"
-                            className="w-[116px] sm:w-[136px] shrink-0 h-auto"
-                          />
-                          <span className="stamp stamp-in text-brass absolute -top-3 right-5">Selected</span>
+                          <div>
+                            <label className="block font-mono text-[0.7rem] tracking-[0.15em] uppercase text-ink-soft mb-2">
+                              Last name
+                            </label>
+                            <input
+                              type="text"
+                              required
+                              disabled={!registrationOpen}
+                              value={formData.surname}
+                              onChange={(e) => setFormData({ ...formData, surname: e.target.value })}
+                              className="w-full px-4 py-3.5 bg-paper border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-ink/40 focus:border-transparent text-ink transition-all text-base placeholder:text-ink/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                              placeholder="Rakna"
+                            />
+                          </div>
                         </div>
-                      ) : (
-                        <div className="rounded-2xl border border-dashed border-line p-6 text-center font-mono text-[0.7rem] tracking-[0.15em] uppercase text-ink-soft">
-                          Tap a destination to preview its cabin
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
+                          <div>
+                            <label className="block font-mono text-[0.7rem] tracking-[0.15em] uppercase text-ink-soft mb-2">
+                              Class
+                            </label>
+                            <div className="relative">
+                              <select
+                                required
+                                disabled={!registrationOpen}
+                                value={formData.class}
+                                onChange={(e) => setFormData({ ...formData, class: e.target.value })}
+                                className="w-full px-4 py-3.5 bg-paper border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-ink/40 focus:border-transparent text-ink transition-all text-base appearance-none disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                <option value="" disabled>Select class</option>
+                                <option value="1/12">1/12</option>
+                                <option value="1/13">1/13</option>
+                                <option value="2/12">2/12</option>
+                                <option value="2/13">2/13</option>
+                                <option value="3/11">3/11</option>
+                                <option value="3/12">3/12</option>
+                                <option value="4/12">4/12</option>
+                                <option value="4/13">4/13</option>
+                                <option value="5/12">5/12</option>
+                                <option value="5/13">5/13</option>
+                                <option value="6/12">6/12</option>
+                                <option value="6/13">6/13</option>
+                              </select>
+                              <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-ink-soft">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                              </div>
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block font-mono text-[0.7rem] tracking-[0.15em] uppercase text-ink-soft mb-2">
+                              Class number
+                            </label>
+                            <input
+                              type="tel"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              disabled={!registrationOpen}
+                              value={formData.class_no}
+                              onChange={(e) => setFormData({ ...formData, class_no: e.target.value })}
+                              className="w-full px-4 py-3.5 bg-paper border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-ink/40 focus:border-transparent text-ink transition-all text-base font-mono tabular-nums placeholder:text-ink/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                              placeholder="33"
+                            />
+                          </div>
                         </div>
-                      )}
+
+                        <button
+                          type="submit"
+                          disabled={!registrationOpen}
+                          className="w-full bg-ink hover:bg-ink/90 active:scale-[0.99] disabled:bg-ink/15 disabled:text-ink/40 text-paper font-semibold py-4 px-6 rounded-xl transition-all disabled:cursor-not-allowed text-lg shadow-lg hover:shadow-xl mt-2"
+                        >
+                          {!registrationOpen ? "Boarding not open" : "Continue to destination →"}
+                        </button>
+                      </form>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* ── Step 2: Choose destination ── */}
+                {step === 2 && (
+                  <motion.div
+                    key="step2"
+                    initial={{ opacity: 0, x: 30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -30 }}
+                    transition={{ duration: 0.25 }}
+                  >
+                    {/* Passenger summary strip */}
+                    <div className="flex items-center justify-between bg-white border border-line rounded-2xl px-5 py-3.5 mb-6 shadow-sm">
+                      <div className="flex items-center gap-4 min-w-0">
+                        <span className="font-mono text-[0.6rem] tracking-[0.2em] uppercase text-brass shrink-0">Passenger</span>
+                        <span className="font-semibold text-ink truncate">{formData.name} {formData.surname}</span>
+                        <span className="font-mono text-xs text-ink-soft tabular-nums hidden sm:block">{formData.student_id}</span>
+                        <span className="font-mono text-xs text-ink-soft hidden sm:block">{formData.class}</span>
+                      </div>
+                      <button
+                        onClick={() => setStep(1)}
+                        className="font-mono text-[0.65rem] tracking-[0.15em] uppercase text-ink-soft hover:text-ink transition-colors shrink-0 ml-4"
+                      >
+                        ← Edit
+                      </button>
                     </div>
 
-                    <button
-                      onClick={handleSubmit}
-                      disabled={loading || !selectedCity || !registrationOpen}
-                      className="w-full bg-ink hover:bg-ink/90 active:scale-[0.99] disabled:bg-ink/15 disabled:text-ink/40 text-paper font-semibold py-4 px-6 rounded-xl transition-all disabled:cursor-not-allowed text-lg shadow-lg hover:shadow-xl"
-                    >
-                      {loading ? "Working…" : !registrationOpen ? "Boarding not open" : !selectedCity ? "Select a destination" : "Review & confirm"}
-                    </button>
-                  </div>
-                </div>
-              </div>
+                    <div className="bg-white border border-line rounded-3xl p-6 sm:p-8 lg:p-10 shadow-sm">
+                      <div className="flex items-center gap-3 mb-6">
+                        <span className="font-mono text-xs font-bold text-brass">02</span>
+                        <h2 className="font-serif text-2xl font-semibold text-ink">Choose your destination</h2>
+                      </div>
+
+                      <p className="font-mono text-[0.65rem] tracking-[0.1em] uppercase text-ink-soft mb-6">
+                        Tap a pin to choose where you&apos;ll fly.
+                      </p>
+
+                      <ThailandMap
+                        cities={cities}
+                        selectedCity={selectedCity}
+                        onSelect={setSelectedCity}
+                        registrationOpen={registrationOpen}
+                        mapClassName="max-w-[380px]"
+                      />
+
+                      {/* Selected destination cabin */}
+                      <div className="mt-6 mb-8">
+                        {selectedCityData ? (
+                          <div className="relative flex items-center gap-4 sm:gap-5 rounded-2xl border border-brass/40 bg-brass/5 bg-security p-4 sm:p-5">
+                            <div className="min-w-0 flex-1">
+                              <p className="font-mono text-[0.6rem] tracking-[0.2em] uppercase text-ink-soft mb-1">
+                                {gateCode(selectedIndex)} · Your cabin
+                              </p>
+                              <h3 className="font-serif text-2xl sm:text-3xl font-semibold text-brass mb-1">
+                                {selectedCityData.name}
+                              </h3>
+                              <p className="font-mono text-[0.65rem] tracking-[0.1em] uppercase text-ink-soft tabular-nums">
+                                {selectedCityData.current_count} / {selectedCityData.quota} taken · {selectedCityData.remaining} left
+                              </p>
+                            </div>
+                            <AirplaneSeatMap
+                              total={selectedCityData.quota}
+                              taken={selectedCityData.current_count}
+                              variant="selected"
+                              className="w-[116px] sm:w-[136px] shrink-0 h-auto"
+                            />
+                            <span className="stamp stamp-in text-brass absolute -top-3 right-5">Selected</span>
+                          </div>
+                        ) : (
+                          <div className="rounded-2xl border border-dashed border-line p-6 text-center font-mono text-[0.7rem] tracking-[0.15em] uppercase text-ink-soft">
+                            Tap a destination to preview its cabin
+                          </div>
+                        )}
+                      </div>
+
+                      <button
+                        onClick={handleSubmit}
+                        disabled={loading || !selectedCity}
+                        className="w-full bg-ink hover:bg-ink/90 active:scale-[0.99] disabled:bg-ink/15 disabled:text-ink/40 text-paper font-semibold py-4 px-6 rounded-xl transition-all disabled:cursor-not-allowed text-lg shadow-lg hover:shadow-xl"
+                      >
+                        {loading ? "Working…" : !selectedCity ? "Select a destination" : "Review & confirm"}
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+
+              </AnimatePresence>
             </div>
           </motion.div>
         )}
+
       </AnimatePresence>
     </div>
   );

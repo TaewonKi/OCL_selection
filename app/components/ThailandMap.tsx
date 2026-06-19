@@ -109,21 +109,21 @@ export function ThailandMap({ cities, selectedCity, onSelect, registrationOpen, 
                     ? `${city.name} — full`
                     : `${city.name} — ${city.remaining} seats left${interactive ? ", select" : ""}`
                 }
-                className={`absolute flex -translate-x-1/2 -translate-y-full flex-col items-center focus:outline-none ${
+                className={`group absolute flex -translate-x-1/2 -translate-y-full flex-col items-center focus:outline-none ${
                   interactive ? "cursor-pointer" : "cursor-not-allowed"
                 } ${!registrationOpen ? "opacity-60" : ""}`}
                 style={{ left: `${(coord[0] / VW) * 100}%`, top: `${(coord[1] / VH) * 100}%` }}
               >
                 <span
-                  className={`mb-1 rounded-md border bg-white px-1.5 py-0.5 font-mono text-[0.6rem] font-bold uppercase tracking-wide whitespace-nowrap shadow-sm transition-transform ${labelColor} ${
-                    interactive ? "group-hover:-translate-y-0.5" : ""
-                  } ${isSelected ? "ring-1 ring-brass" : ""}`}
+                  className={`mb-1 rounded-md border bg-white px-1.5 py-0.5 font-mono text-[0.6rem] font-bold uppercase tracking-wide whitespace-nowrap shadow-sm transition-all duration-150 ${labelColor} ${
+                    isSelected ? "ring-1 ring-brass opacity-100 -translate-y-0.5" : "opacity-0 group-hover:opacity-100 group-hover:-translate-y-0.5 group-focus:-translate-y-0.5 group-focus:opacity-100"
+                  }`}
                 >
                   {city.name}
                 </span>
                 <span
-                  className={`block h-3.5 w-3.5 -rotate-45 border-2 border-white shadow ${dotColor} ${
-                    isSelected ? "scale-125" : ""
+                  className={`block h-3.5 w-3.5 -rotate-45 border-2 border-white shadow transition-transform duration-150 ${dotColor} ${
+                    isSelected ? "scale-125" : "group-hover:scale-110"
                   }`}
                   style={{ borderRadius: "50% 50% 50% 0" }}
                 />

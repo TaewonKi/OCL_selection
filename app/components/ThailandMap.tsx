@@ -67,7 +67,7 @@ export function ThailandMap({ cities, selectedCity, onSelect, registrationOpen, 
 
         <div className="absolute inset-0">
           {pinned.map(({ city, coord }) => {
-            const [px, py] = project(coord[0], coord[1]);
+            const [px, py] = coord;
             const isFull = city.remaining === 0;
             const isSelected = selectedCity === city.city_id;
             const interactive = registrationOpen && !isFull;

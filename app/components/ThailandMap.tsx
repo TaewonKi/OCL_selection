@@ -22,13 +22,15 @@ type ThailandMapProps = {
   mapClassName?: string;
 };
 
-// Maps each destination name (lowercased) to its province name in th.json.
-// Most match directly; exceptions are listed explicitly.
-const CITY_TO_PROVINCE: Record<string, string> = {
-  bangkok:              "Bangkok Metropolis",
-  pattaya:              "Phatthaya",
-  ayutthaya:            "Phra Nakhon Si Ayutthaya",
-  "hua hin":            "Prachuap Khiri Khan",
+// Aliases for names that don't match th.json province names directly.
+const ALIASES: Record<string, string> = {
+  bangkok:                           "Bangkok Metropolis",
+  pattaya:                           "Phatthaya",
+  ayutthaya:                         "Phra Nakhon Si Ayutthaya",
+  "hua hin":                         "Prachuap Khiri Khan",
+  huahin:                            "Prachuap Khiri Khan",
+  "phang-nga":                       "Phangnga",
+  "kiriwong nakhon si thammarat":    "Nakhon Si Thammarat",
 };
 
 // Build a centroid lookup keyed by lowercased province name.
@@ -36,11 +38,25 @@ const provinceCentroid = Object.fromEntries(
   PROVINCE_PATHS.map((p) => [p.name.toLowerCase(), [p.cx, p.cy] as [number, number]])
 );
 
+function resolveProvince(part: string): [number, number] | undefined {
+  const key = part.trim().toLowerCase();
+  const name = (ALIASES[key] ?? key);
+  return provinceCentroid[name.toLowerCase()];
+}
+
+// Pin position for a route:
+//  - if pin_province is set, use it directly (single override)
+//  - otherwise split the name on " - ", resolve each stop, average the centroids
 function pinPosition(city: MapCity): [number, number] | undefined {
-  const province = city.pin_province ?? city.name;
-  const key = province.trim().toLowerCase();
-  const resolved = (CITY_TO_PROVINCE[key] ?? province).toLowerCase();
-  return provinceCentroid[resolved];
+  if (city.pin_province) return resolveProvince(city.pin_province);
+
+  const stops = city.name.split(" - ");
+  const coords = stops.map(resolveProvince).filter(Boolean) as [number, number][];
+  if (coords.length === 0) return undefined;
+
+  const cx = coords.reduce((s, [x]) => s + x, 0) / coords.length;
+  const cy = coords.reduce((s, [, y]) => s + y, 0) / coords.length;
+  return [cx, cy];
 }
 
 export function ThailandMap({ cities, selectedCity, onSelect, registrationOpen, mapClassName = "max-w-[280px]" }: ThailandMapProps) {

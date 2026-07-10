@@ -1,3 +1,3 @@
 There is nothing here. I will update later
 
-Developed by Taewon Kim
+Originally Developed by Taewon Kim, Polished by Achitphon Inter

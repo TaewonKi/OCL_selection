@@ -19,51 +19,51 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Get all cities
-    const { data: cities, error: citiesError } = await supabaseClient
-      .from("cities")
-      .select("id, name, quota, pin_province")
+    // Get all trips
+    const { data: trips, error: tripsError } = await supabaseClient
+      .from("trips")
+      .select("id, name, quota, stops")
       .order("name");
 
-    if (citiesError) {
-      throw citiesError;
+    if (tripsError) {
+      throw tripsError;
     }
 
-    // Get student counts for each city
-    const citiesWithCounts = await Promise.all(
-      (cities || []).map(async (city) => {
+    // Get student counts for each trip
+    const tripsWithCounts = await Promise.all(
+      (trips || []).map(async (trip) => {
         const { count, error: countError } = await supabaseClient
           .from("students")
           .select("*", { count: "exact", head: true })
-          .eq("city_id", city.id);
+          .eq("trip_id", trip.id);
 
         if (countError) {
-          console.error(`Error counting students for city ${city.id}:`, countError);
+          console.error(`Error counting students for trip ${trip.id}:`, countError);
           return {
-            city_id: city.id,
-            name: city.name,
-            quota: city.quota,
-            pin_province: city.pin_province ?? null,
+            trip_id: trip.id,
+            name: trip.name,
+            quota: trip.quota,
+            stops: trip.stops ?? [],
             current_count: 0,
-            remaining: city.quota,
+            remaining: trip.quota,
           };
         }
 
         const currentCount = count ?? 0;
         return {
-          city_id: city.id,
-          name: city.name,
-          quota: city.quota,
-          pin_province: city.pin_province ?? null,
+          trip_id: trip.id,
+          name: trip.name,
+          quota: trip.quota,
+          stops: trip.stops ?? [],
           current_count: currentCount,
-          remaining: Math.max(0, city.quota - currentCount),
+          remaining: Math.max(0, trip.quota - currentCount),
         };
       })
     );
 
     return new Response(
       JSON.stringify({
-        cities: citiesWithCounts,
+        trips: tripsWithCounts,
       }),
       {
         status: 200,
@@ -76,7 +76,7 @@ serve(async (req) => {
       JSON.stringify({
         success: false,
         error_code: "SERVER_ERROR",
-        message: "Failed to fetch city status.",
+        message: "Failed to fetch trip status.",
       }),
       {
         status: 500,

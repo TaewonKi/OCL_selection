@@ -20,15 +20,15 @@ serve(async (req) => {
     );
 
     const url = new URL(req.url);
-    const cityId = url.searchParams.get("city_id");
+    const tripId = url.searchParams.get("trip_id");
 
     let query = supabaseClient
       .from("students")
-      .select("*, cities(name)")
+      .select("*, trips(name)")
       .order("created_at", { ascending: false });
 
-    if (cityId) {
-      query = query.eq("city_id", cityId);
+    if (tripId) {
+      query = query.eq("trip_id", tripId);
     }
 
     const { data: students, error } = await query;

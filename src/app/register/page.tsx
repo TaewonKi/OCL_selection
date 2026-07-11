@@ -10,13 +10,13 @@ import { Countdown } from "../components/Countdown";
 import { AirplaneSeatMap } from "../components/AirplaneSeatMap";
 import { ThailandMap } from "../components/ThailandMap";
 
-interface City {
-  city_id: string;
+interface Trip {
+  trip_id: string;
   name: string;
   quota: number;
   current_count: number;
   remaining: number;
-  pin_province?: string | null;
+  stops: string[];
 }
 
 interface FormData {
@@ -30,8 +30,8 @@ interface FormData {
 const gateCode = (index: number) => `GATE ${(index + 1).toString().padStart(2, "0")}`;
 
 export default function RegisterPage() {
-  const [cities, setCities] = useState<City[]>([]);
-  const [selectedCity, setSelectedCity] = useState<string | null>(null);
+  const [trips, setTrips] = useState<Trip[]>([]);
+  const [selectedTrip, setSelectedTrip] = useState<string | null>(null);
   const [step, setStep] = useState<1 | 2>(1);
   const [formData, setFormData] = useState<FormData>({
     student_id: "",
@@ -47,7 +47,7 @@ export default function RegisterPage() {
   } | null>(null);
   const [showErrorPopup, setShowErrorPopup] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
-  const [registeredCityName, setRegisteredCityName] = useState<string>("");
+  const [registeredTripName, setRegisteredTripName] = useState<string>("");
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [registrationOpen, setRegistrationOpen] = useState(false);
   const homeButtonClasses =
@@ -63,25 +63,25 @@ export default function RegisterPage() {
     }
   }, [showErrorPopup]);
 
-  const fetchCityStatus = async () => {
+  const fetchTripStatus = async () => {
     try {
       const functionsUrl = process.env.NEXT_PUBLIC_SUPABASE_FUNCTIONS_URL;
       const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-      const response = await fetch(`${functionsUrl}/city-status`, {
+      const response = await fetch(`${functionsUrl}/trip-status`, {
         headers: {
           'Authorization': `Bearer ${anonKey}`,
           'apikey': anonKey || '',
         },
       });
       const data = await response.json();
-      setCities(data.cities || []);
+      setTrips(data.trips || []);
     } catch (error) {
-      console.error("Error fetching city status:", error);
+      console.error("Error fetching trip status:", error);
     }
   };
 
   useEffect(() => {
-    fetchCityStatus();
+    fetchTripStatus();
 
     const channel = supabase
       .channel("students_changes")
@@ -89,7 +89,7 @@ export default function RegisterPage() {
         "postgres_changes",
         { event: "*", schema: "public", table: "students" },
         () => {
-          fetchCityStatus();
+          fetchTripStatus();
         }
       )
       .subscribe();
@@ -112,7 +112,7 @@ export default function RegisterPage() {
 
   // Step 2 submit → show confirmation
   const handleSubmit = () => {
-    if (!selectedCity) {
+    if (!selectedTrip) {
       setMessage({ type: "error", text: "Please select a destination" });
       setShowErrorPopup(true);
       return;
@@ -138,15 +138,15 @@ export default function RegisterPage() {
         },
         body: JSON.stringify({
           ...formData,
-          city_id: selectedCity,
+          trip_id: selectedTrip,
         }),
       });
 
       const data = await response.json();
 
       if (data.success) {
-        const cityName = cities.find(c => c.city_id === selectedCity)?.name || "";
-        setRegisteredCityName(cityName);
+        const tripName = trips.find(t => t.trip_id === selectedTrip)?.name || "";
+        setRegisteredTripName(tripName);
         setRegistrationSuccess(true);
       } else {
         setMessage({ type: "error", text: data.message });
@@ -161,8 +161,8 @@ export default function RegisterPage() {
     }
   };
 
-  const selectedCityData = cities.find(c => c.city_id === selectedCity);
-  const selectedIndex = cities.findIndex(c => c.city_id === selectedCity);
+  const selectedTripData = trips.find(t => t.trip_id === selectedTrip);
+  const selectedIndex = trips.findIndex(t => t.trip_id === selectedTrip);
 
   return (
     <div className="min-h-screen bg-paper text-ink">
@@ -253,7 +253,7 @@ export default function RegisterPage() {
                   <div className="flex items-end justify-between pt-2">
                     <div>
                       <p className="font-mono text-[0.65rem] tracking-[0.2em] uppercase text-ink-soft mb-1">Destination</p>
-                      <p className="font-serif text-3xl font-semibold text-ink">{selectedCityData?.name}</p>
+                      <p className="font-serif text-3xl font-semibold text-ink">{selectedTripData?.name}</p>
                     </div>
                     <span className="font-mono text-[0.65rem] tracking-[0.2em] uppercase text-brass">Confirmed seats</span>
                   </div>
@@ -323,7 +323,7 @@ export default function RegisterPage() {
 
                   <div className="pt-2 mb-2">
                     <p className="font-mono text-[0.65rem] tracking-[0.2em] uppercase text-ink-soft mb-1">Destination</p>
-                    <p className="font-serif text-3xl font-semibold text-stamp">{registeredCityName}</p>
+                    <p className="font-serif text-3xl font-semibold text-stamp">{registeredTripName}</p>
                   </div>
                 </div>
 
@@ -333,7 +333,7 @@ export default function RegisterPage() {
                       setRegistrationSuccess(false);
                       setStep(1);
                       setFormData({ student_id: "", name: "", surname: "", class: "", class_no: "" });
-                      setSelectedCity(null);
+                      setSelectedTrip(null);
                       setMessage(null);
                     }}
                     className="w-full bg-ink hover:bg-ink/90 text-paper font-semibold py-4 rounded-xl transition-all"
@@ -550,31 +550,31 @@ export default function RegisterPage() {
                       </p>
 
                       <ThailandMap
-                        cities={cities}
-                        selectedCity={selectedCity}
-                        onSelect={setSelectedCity}
+                        trips={trips}
+                        selectedTrip={selectedTrip}
+                        onSelect={setSelectedTrip}
                         registrationOpen={registrationOpen}
                         mapClassName="max-w-[380px]"
                       />
 
                       {/* Selected destination cabin */}
                       <div className="mt-6 mb-8">
-                        {selectedCityData ? (
+                        {selectedTripData ? (
                           <div className="relative flex items-center gap-4 sm:gap-5 rounded-2xl border border-brass/40 bg-brass/5 bg-security p-4 sm:p-5">
                             <div className="min-w-0 flex-1">
                               <p className="font-mono text-[0.6rem] tracking-[0.2em] uppercase text-ink-soft mb-1">
                                 {gateCode(selectedIndex)} · Your cabin
                               </p>
                               <h3 className="font-serif text-2xl sm:text-3xl font-semibold text-brass mb-1">
-                                {selectedCityData.name}
+                                {selectedTripData.name}
                               </h3>
                               <p className="font-mono text-[0.65rem] tracking-[0.1em] uppercase text-ink-soft tabular-nums">
-                                {selectedCityData.current_count} / {selectedCityData.quota} taken · {selectedCityData.remaining} left
+                                {selectedTripData.current_count} / {selectedTripData.quota} taken · {selectedTripData.remaining} left
                               </p>
                             </div>
                             <AirplaneSeatMap
-                              total={selectedCityData.quota}
-                              taken={selectedCityData.current_count}
+                              total={selectedTripData.quota}
+                              taken={selectedTripData.current_count}
                               variant="selected"
                               className="w-[116px] sm:w-[136px] shrink-0 h-auto"
                             />
@@ -589,10 +589,10 @@ export default function RegisterPage() {
 
                       <button
                         onClick={handleSubmit}
-                        disabled={loading || !selectedCity}
+                        disabled={loading || !selectedTrip}
                         className="w-full bg-ink hover:bg-ink/90 active:scale-[0.99] disabled:bg-ink/15 disabled:text-ink/40 text-paper font-semibold py-4 px-6 rounded-xl transition-all disabled:cursor-not-allowed text-lg shadow-lg hover:shadow-xl"
                       >
-                        {loading ? "Working…" : !selectedCity ? "Select a destination" : "Review & confirm"}
+                        {loading ? "Working…" : !selectedTrip ? "Select a destination" : "Review & confirm"}
                       </button>
                     </div>
                   </motion.div>

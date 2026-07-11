@@ -1,9 +1,10 @@
 // Type definitions for the Trip Registration System
 
-export interface City {
-  city_id: string;
+export interface Trip {
+  trip_id: string;
   name: string;
   quota: number;
+  stops: string[];
   current_count: number;
   remaining: number;
 }
@@ -14,7 +15,7 @@ export interface Student {
   surname: string;
   class?: string;
   class_no?: string;
-  city_id: string;
+  trip_id: string;
   created_at: string;
 }
 
@@ -24,7 +25,7 @@ export interface RegisterRequest {
   surname: string;
   class?: string;
   class_no?: string;
-  city_id: string;
+  trip_id: string;
 }
 
 export interface ApiResponse {
@@ -33,13 +34,13 @@ export interface ApiResponse {
   error_code?: string;
 }
 
-export interface CityStatusResponse {
-  cities: City[];
+export interface TripStatusResponse {
+  trips: Trip[];
 }
 
-export type ErrorCode = 
+export type ErrorCode =
   | "ALREADY_REGISTERED"
   | "QUOTA_FULL"
   | "INVALID_INPUT"
-  | "INVALID_CITY"
+  | "INVALID_TRIP"
   | "SERVER_ERROR";

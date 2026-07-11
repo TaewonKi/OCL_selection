@@ -47,8 +47,8 @@ serve(async (req) => {
         surname,
         class,
         class_no,
-        city_id,
-        cities!inner (
+        trip_id,
+        trips!inner (
           name
         )
       `)
@@ -79,7 +79,7 @@ serve(async (req) => {
           surname: student.surname,
           class: student.class,
           class_no: student.class_no,
-          city: student.cities?.name || "Unknown",
+          trip: student.trips?.name || "Unknown",
         },
       }),
       {

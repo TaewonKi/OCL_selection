@@ -10,7 +10,7 @@ interface RegistrationData {
   surname: string;
   class: string;
   class_no: string;
-  city: string;
+  trip: string;
 }
 
 export default function CheckRegistrationPage() {
@@ -179,7 +179,7 @@ export default function CheckRegistrationPage() {
 
                   <div className="mb-6">
                     <p className="font-mono text-[0.65rem] tracking-[0.2em] uppercase text-ink-soft mb-1">Destination</p>
-                    <p className="font-serif text-3xl font-semibold text-stamp">{registrationData.city}</p>
+                    <p className="font-serif text-3xl font-semibold text-stamp">{registrationData.trip}</p>
                   </div>
 
                   <div className="p-4 bg-brass/5 border border-brass/20 rounded-xl flex gap-3">

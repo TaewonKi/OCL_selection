@@ -1,8 +1,9 @@
 # OCL Selection — Project Context
 
-A trip-registration / city-selection web app for students. Students enter their
-student ID, pick a city for a trip, and register subject to per-city quotas.
-A teacher view and a registration-check view round out the flows.
+A trip-registration web app for students. Students enter their student ID, pick
+a trip (each trip is an ordered itinerary across several provinces), and
+register subject to per-trip quotas. A teacher view and a registration-check
+view round out the flows.
 
 > This file is a tool-agnostic project context for any AI coding assistant
 > (Claude Code, Cursor, Copilot, Aider, Windsurf, etc.). Some tools auto-load a
@@ -34,23 +35,26 @@ app/
   hooks/useServerTime.ts    Clock sync via performance.now() (anti clock-tamper)
   globals.css
 lib/supabase.ts             Browser Supabase client (anon key)
-types/index.ts              Shared types: City, Student, RegisterRequest, ApiResponse, ErrorCode
+types/index.ts              Shared types: Trip, Student, RegisterRequest, ApiResponse, ErrorCode
 supabase/
   functions/                Deno edge functions (service-role key, server-side)
-    check-registration/  city-status/  get-students/  register-trip/
-  migrations/               01_create_cities … 04_add_student_level
+    check-registration/  trip-status/  get-students/  register-trip/
+  migrations/               01_create_trips … 04_add_student_level
+  seed.sql                  Local dev/test data only (never pushed to remote)
   config.toml
 ```
 
 ## Data model (Postgres)
 
-- **cities**: `id uuid pk`, `name text`, `quota int` (seeded: Bangkok 50, Chiang Mai 40, Phuket 35, Pattaya 45)
-- **students**: `student_id text pk`, `name`, `surname`, `class`, `class_no`, `city_id uuid → cities.id`, `level text`, `created_at timestamptz`
-  - Index on `city_id`. Realtime enabled on `students`.
+- **trips**: `id uuid pk`, `name text`, `quota int`, `stops jsonb` (ordered array
+  of province name strings, e.g. `["Phuket","Trang","Panga"]`). Quota and stops
+  are admin-set per year via the Supabase dashboard — never hardcode them.
+- **students**: `student_id text pk`, `name`, `surname`, `class`, `class_no`, `trip_id uuid → trips.id`, `level text`, `created_at timestamptz`
+  - Index on `trip_id`. Realtime enabled on `students`.
 
-⚠️ **Known mismatch:** `types/index.ts` `City` uses `city_id`, `current_count`,
+⚠️ **Known mismatch:** `types/index.ts` `Trip` uses `trip_id`, `current_count`,
 `remaining`, but the DB table uses `id` and computes counts at query time. Treat the
-DB schema as source of truth; the `City` type is partly a view/derived shape.
+DB schema as source of truth; the `Trip` type is partly a view/derived shape.
 
 ## Conventions
 
@@ -63,7 +67,7 @@ DB schema as source of truth; the `City` type is partly a view/derived shape.
   preflight and return `corsHeaders`. Return `{ success, error_code?, message? }`
   with `error_code` from the `ErrorCode` union in `types/index.ts`.
 - **Quota enforcement** lives server-side in `register-trip`: check already-registered →
-  validate city → count current registrations → compare to quota → insert.
+  validate trip → count current registrations → compare to quota → insert.
 - **Time:** Do not trust the client clock. Use `useServerTime()` and `/api/server-time`.
 - **'use client'** required for any component using hooks, framer-motion, or R3F.
 

@@ -46,7 +46,7 @@ export default function LandingPage() {
             transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
             className="text-lg sm:text-xl text-ink-soft max-w-2xl mx-auto leading-relaxed mb-12"
           >
-            Twelve cities. One term abroad. Choose a destination, claim your seat,
+            Several trips. One term abroad. Choose a destination, claim your seat,
             and learn the world first-hand alongside your year group.
           </motion.p>
 

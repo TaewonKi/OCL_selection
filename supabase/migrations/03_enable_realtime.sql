@@ -1,11 +1,11 @@
 -- Optional: Row Level Security (RLS) Policies
 -- Uncomment and run these if you want to add RLS protection
 
--- Enable RLS on cities table (read-only for public)
--- ALTER TABLE cities ENABLE ROW LEVEL SECURITY;
+-- Enable RLS on trips table (read-only for public)
+-- ALTER TABLE trips ENABLE ROW LEVEL SECURITY;
 
--- CREATE POLICY "Cities are viewable by everyone"
---   ON cities FOR SELECT
+-- CREATE POLICY "Trips are viewable by everyone"
+--   ON trips FOR SELECT
 --   USING (true);
 
 -- Enable RLS on students table

@@ -3,19 +3,19 @@
 import { useState } from "react";
 import { PROVINCE_PATHS, VW, VH } from "./thailand-paths";
 
-type MapCity = {
-  city_id: string;
+type MapTrip = {
+  trip_id: string;
   name: string;
   quota: number;
   current_count: number;
   remaining: number;
-  pin_province?: string | null;
+  stops: string[];
 };
 
 type ThailandMapProps = {
-  cities: MapCity[];
-  selectedCity: string | null;
-  onSelect: (cityId: string) => void;
+  trips: MapTrip[];
+  selectedTrip: string | null;
+  onSelect: (tripId: string) => void;
   registrationOpen: boolean;
   mapClassName?: string;
 };
@@ -40,10 +40,8 @@ function resolveProvince(part: string): [number, number] | undefined {
   return provinceCentroid[name.toLowerCase()];
 }
 
-function pinPosition(city: MapCity): [number, number] | undefined {
-  if (city.pin_province) return resolveProvince(city.pin_province);
-  const stops = city.name.split(" - ");
-  const coords = stops.map(resolveProvince).filter(Boolean) as [number, number][];
+function pinPosition(trip: MapTrip): [number, number] | undefined {
+  const coords = trip.stops.map(resolveProvince).filter(Boolean) as [number, number][];
   if (coords.length === 0) return undefined;
   const cx = coords.reduce((s, [x]) => s + x, 0) / coords.length;
   const cy = coords.reduce((s, [, y]) => s + y, 0) / coords.length;
@@ -51,15 +49,13 @@ function pinPosition(city: MapCity): [number, number] | undefined {
 }
 
 // Returns all province names (lowercased) that the route visits.
-function getAffectedProvinces(city: MapCity): Set<string> {
+function getAffectedProvinces(trip: MapTrip): Set<string> {
   const names = new Set<string>();
-  const addPart = (part: string) => {
+  trip.stops.forEach((part) => {
     const key = part.trim().toLowerCase();
     const resolved = (ALIASES[key] ?? key).toLowerCase();
     if (provinceCentroid[resolved]) names.add(resolved);
-  };
-  city.name.split(" - ").forEach(addPart);
-  if (city.pin_province) addPart(city.pin_province);
+  });
   return names;
 }
 
@@ -67,29 +63,29 @@ function coordKey([x, y]: [number, number]) {
   return `${x.toFixed(1)},${y.toFixed(1)}`;
 }
 
-export function ThailandMap({ cities, selectedCity, onSelect, registrationOpen, mapClassName = "max-w-[280px]" }: ThailandMapProps) {
+export function ThailandMap({ trips, selectedTrip, onSelect, registrationOpen, mapClassName = "max-w-[280px]" }: ThailandMapProps) {
   const [openKey, setOpenKey] = useState<string | null>(null);
 
-  const pinned = cities
-    .map((city) => ({ city, coord: pinPosition(city) }))
-    .filter((e): e is { city: MapCity; coord: [number, number] } => Boolean(e.coord));
+  const pinned = trips
+    .map((trip) => ({ trip, coord: pinPosition(trip) }))
+    .filter((e): e is { trip: MapTrip; coord: [number, number] } => Boolean(e.coord));
 
-  const unplaced = cities.filter((city) => !pinPosition(city));
+  const unplaced = trips.filter((trip) => !pinPosition(trip));
 
-  // Provinces to glow: derived from the selected city's route.
-  const glowingProvinces: Set<string> = selectedCity
+  // Provinces to glow: derived from the selected trip's route.
+  const glowingProvinces: Set<string> = selectedTrip
     ? (() => {
-        const city = cities.find((c) => c.city_id === selectedCity);
-        return city ? getAffectedProvinces(city) : new Set<string>();
+        const trip = trips.find((t) => t.trip_id === selectedTrip);
+        return trip ? getAffectedProvinces(trip) : new Set<string>();
       })()
     : new Set<string>();
 
   // Group co-located pins.
-  const groups = new Map<string, { coord: [number, number]; cities: MapCity[] }>();
-  for (const { city, coord } of pinned) {
+  const groups = new Map<string, { coord: [number, number]; trips: MapTrip[] }>();
+  for (const { trip, coord } of pinned) {
     const key = coordKey(coord);
-    if (!groups.has(key)) groups.set(key, { coord, cities: [] });
-    groups.get(key)!.cities.push(city);
+    if (!groups.has(key)) groups.set(key, { coord, trips: [] });
+    groups.get(key)!.trips.push(trip);
   }
 
   return (
@@ -137,10 +133,10 @@ export function ThailandMap({ cities, selectedCity, onSelect, registrationOpen, 
         </svg>
 
         <div className="absolute inset-0">
-          {[...groups.entries()].map(([key, { coord, cities: group }]) => {
+          {[...groups.entries()].map(([key, { coord, trips: group }]) => {
             const isGroupOpen = openKey === key;
-            const anySelected = group.some((c) => c.city_id === selectedCity);
-            const allFull = group.every((c) => c.remaining === 0);
+            const anySelected = group.some((t) => t.trip_id === selectedTrip);
+            const allFull = group.every((t) => t.remaining === 0);
             const multi = group.length > 1;
 
             const dotColor = allFull ? "bg-oxblood" : anySelected ? "bg-brass" : "bg-stamp";
@@ -157,17 +153,17 @@ export function ThailandMap({ cities, selectedCity, onSelect, registrationOpen, 
                       isGroupOpen ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
                     }`}
                   >
-                    {group.map((city) => {
-                      const isFull = city.remaining === 0;
-                      const isSelected = selectedCity === city.city_id;
+                    {group.map((trip) => {
+                      const isFull = trip.remaining === 0;
+                      const isSelected = selectedTrip === trip.trip_id;
                       const interactive = registrationOpen && !isFull;
                       return (
                         <button
-                          key={city.city_id}
+                          key={trip.trip_id}
                           type="button"
                           disabled={!interactive}
                           onClick={() => {
-                            if (interactive) { onSelect(city.city_id); setOpenKey(null); }
+                            if (interactive) { onSelect(trip.trip_id); setOpenKey(null); }
                           }}
                           className={`flex items-center justify-between gap-3 px-2.5 py-1.5 text-left font-mono text-[0.6rem] uppercase tracking-wide whitespace-nowrap transition-colors ${
                             isSelected
@@ -177,9 +173,9 @@ export function ThailandMap({ cities, selectedCity, onSelect, registrationOpen, 
                               : "text-ink hover:bg-paper cursor-pointer"
                           }`}
                         >
-                          <span>{city.name}</span>
+                          <span>{trip.name}</span>
                           <span className={`text-[0.55rem] font-bold ${isFull ? "text-oxblood/50" : "text-stamp"}`}>
-                            {isFull ? "FULL" : `${city.remaining} left`}
+                            {isFull ? "FULL" : `${trip.remaining} left`}
                           </span>
                         </button>
                       );
@@ -187,9 +183,9 @@ export function ThailandMap({ cities, selectedCity, onSelect, registrationOpen, 
                   </div>
                 ) : (
                   (() => {
-                    const city = group[0];
-                    const isFull = city.remaining === 0;
-                    const isSelected = selectedCity === city.city_id;
+                    const trip = group[0];
+                    const isFull = trip.remaining === 0;
+                    const isSelected = selectedTrip === trip.trip_id;
                     const labelColor =
                       isFull ? "text-oxblood border-oxblood/40"
                       : isSelected ? "text-brass border-brass"
@@ -200,7 +196,7 @@ export function ThailandMap({ cities, selectedCity, onSelect, registrationOpen, 
                           isSelected ? "opacity-100 -translate-y-0.5 ring-1 ring-brass" : "opacity-0 group-hover/pin:opacity-100 group-hover/pin:-translate-y-0.5"
                         }`}
                       >
-                        {city.name}
+                        {trip.name}
                       </span>
                     );
                   })()
@@ -213,16 +209,16 @@ export function ThailandMap({ cities, selectedCity, onSelect, registrationOpen, 
                     multi
                       ? `${group.length} destinations here — tap to expand`
                       : (() => {
-                          const c = group[0];
-                          return c.remaining === 0 ? `${c.name} — full` : `${c.name} — ${c.remaining} seats left`;
+                          const t = group[0];
+                          return t.remaining === 0 ? `${t.name} — full` : `${t.name} — ${t.remaining} seats left`;
                         })()
                   }
                   onClick={() => {
                     if (multi) {
                       setOpenKey(isGroupOpen ? null : key);
                     } else {
-                      const city = group[0];
-                      if (registrationOpen && city.remaining > 0) onSelect(city.city_id);
+                      const trip = group[0];
+                      if (registrationOpen && trip.remaining > 0) onSelect(trip.trip_id);
                     }
                   }}
                   className={`group/pin relative flex items-center justify-center focus:outline-none ${
@@ -253,15 +249,15 @@ export function ThailandMap({ cities, selectedCity, onSelect, registrationOpen, 
             More destinations
           </p>
           <div className="flex flex-wrap justify-center gap-2">
-            {unplaced.map((city) => {
-              const isFull = city.remaining === 0;
-              const isSelected = selectedCity === city.city_id;
+            {unplaced.map((trip) => {
+              const isFull = trip.remaining === 0;
+              const isSelected = selectedTrip === trip.trip_id;
               const interactive = registrationOpen && !isFull;
               return (
                 <button
-                  key={city.city_id}
+                  key={trip.trip_id}
                   type="button"
-                  onClick={() => interactive && onSelect(city.city_id)}
+                  onClick={() => interactive && onSelect(trip.trip_id)}
                   disabled={!interactive}
                   aria-pressed={isSelected}
                   className={`rounded-lg border px-3 py-1.5 font-mono text-[0.65rem] uppercase tracking-wide transition-all ${
@@ -270,8 +266,8 @@ export function ThailandMap({ cities, selectedCity, onSelect, registrationOpen, 
                       : "border-line bg-white text-ink-soft hover:border-ink/30 hover:text-ink"
                   } ${!interactive ? "cursor-not-allowed opacity-60" : ""}`}
                 >
-                  {city.name}
-                  {isFull ? " · Full" : ` · ${city.remaining}`}
+                  {trip.name}
+                  {isFull ? " · Full" : ` · ${trip.remaining}`}
                 </button>
               );
             })}

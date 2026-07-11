@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-interface City {
-  city_id: string;
+interface Trip {
+  trip_id: string;
   name: string;
   quota: number;
   current_count: number;
@@ -18,26 +18,26 @@ interface Student {
   surname: string;
   class: string;
   class_no: string;
-  city_id: string;
+  trip_id: string;
   created_at: string;
-  cities: {
+  trips: {
     name: string;
   };
 }
 
 export default function TeacherPage() {
-  const [cities, setCities] = useState<City[]>([]);
+  const [trips, setTrips] = useState<Trip[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [allStudents, setAllStudents] = useState<Student[]>([]);
-  const [selectedCity, setSelectedCity] = useState<string | null>(null);
+  const [selectedTrip, setSelectedTrip] = useState<string | null>(null);
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [uniqueClasses, setUniqueClasses] = useState<string[]>([]);
 
   const exportToGoogleSheets = () => {
-    // Get the filtered city name
-    const cityName = selectedCity
-      ? cities.find(c => c.city_id === selectedCity)?.name || 'All Destinations'
+    // Get the filtered trip name
+    const tripName = selectedTrip
+      ? trips.find(t => t.trip_id === selectedTrip)?.name || 'All Destinations'
       : 'All Destinations';
 
     // Prepare CSV data
@@ -48,7 +48,7 @@ export default function TeacherPage() {
       student.surname,
       student.class,
       student.class_no,
-      student.cities?.name || cities.find(c => c.city_id === student.city_id)?.name || 'Unknown',
+      student.trips?.name || trips.find(t => t.trip_id === student.trip_id)?.name || 'Unknown',
       new Date(student.created_at).toLocaleString()
     ]);
 
@@ -63,39 +63,39 @@ export default function TeacherPage() {
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `${cityName.replace(/\s+/g, '_')}_Students_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `${tripName.replace(/\s+/g, '_')}_Students_${new Date().toISOString().split('T')[0]}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  const fetchCities = async () => {
+  const fetchTrips = async () => {
     try {
       const functionsUrl = process.env.NEXT_PUBLIC_SUPABASE_FUNCTIONS_URL;
       const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-      const response = await fetch(`${functionsUrl}/city-status`, {
+      const response = await fetch(`${functionsUrl}/trip-status`, {
         headers: {
           'Authorization': `Bearer ${anonKey}`,
           'apikey': anonKey || '',
         },
       });
       const data = await response.json();
-      setCities(data.cities || []);
+      setTrips(data.trips || []);
     } catch (error) {
-      console.error("Error fetching cities:", error);
+      console.error("Error fetching trips:", error);
     }
   };
 
-  const fetchStudents = async (cityId: string | null) => {
+  const fetchStudents = async (tripId: string | null) => {
     setLoading(true);
     try {
       const functionsUrl = process.env.NEXT_PUBLIC_SUPABASE_FUNCTIONS_URL;
       const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
       let url = `${functionsUrl}/get-students`;
-      if (cityId) {
-        url += `?city_id=${cityId}`;
+      if (tripId) {
+        url += `?trip_id=${tripId}`;
       }
 
       const response = await fetch(url, {
@@ -119,13 +119,13 @@ export default function TeacherPage() {
   };
 
   useEffect(() => {
-    fetchCities();
+    fetchTrips();
     fetchStudents(null);
   }, []);
 
   useEffect(() => {
-    fetchStudents(selectedCity);
-  }, [selectedCity]);
+    fetchStudents(selectedTrip);
+  }, [selectedTrip]);
 
   // Apply filters
   useEffect(() => {
@@ -138,8 +138,8 @@ export default function TeacherPage() {
     setStudents(filtered);
   }, [selectedClass, allStudents]);
 
-  const totalSeats = cities.reduce((sum, c) => sum + c.quota, 0);
-  const totalBooked = cities.reduce((sum, c) => sum + c.current_count, 0);
+  const totalSeats = trips.reduce((sum, t) => sum + t.quota, 0);
+  const totalBooked = trips.reduce((sum, t) => sum + t.current_count, 0);
 
   return (
     <div className="min-h-screen bg-paper text-ink">
@@ -184,7 +184,7 @@ export default function TeacherPage() {
           <div className="mt-8 flex flex-wrap gap-x-10 gap-y-4 font-mono text-xs tracking-[0.15em] uppercase text-paper/60">
             <span>Passengers booked · <span className="text-paper tabular-nums">{totalBooked}</span></span>
             <span>Total seats · <span className="text-paper tabular-nums">{totalSeats}</span></span>
-            <span>Destinations · <span className="text-paper tabular-nums">{cities.length}</span></span>
+            <span>Destinations · <span className="text-paper tabular-nums">{trips.length}</span></span>
           </div>
         </div>
       </div>
@@ -197,18 +197,18 @@ export default function TeacherPage() {
               Filter by destination
             </p>
             <div className="flex gap-2.5 overflow-x-auto pb-2">
-              <FilterChip active={selectedCity === null} accent="ink" onClick={() => setSelectedCity(null)}>
+              <FilterChip active={selectedTrip === null} accent="ink" onClick={() => setSelectedTrip(null)}>
                 All destinations
               </FilterChip>
-              {cities.map((city) => (
+              {trips.map((trip) => (
                 <FilterChip
-                  key={city.city_id}
-                  active={selectedCity === city.city_id}
+                  key={trip.trip_id}
+                  active={selectedTrip === trip.trip_id}
                   accent="ink"
-                  onClick={() => setSelectedCity(city.city_id)}
+                  onClick={() => setSelectedTrip(trip.trip_id)}
                 >
-                  {city.name}
-                  <span className="ml-1.5 opacity-70 tabular-nums">{city.current_count}/{city.quota}</span>
+                  {trip.name}
+                  <span className="ml-1.5 opacity-70 tabular-nums">{trip.current_count}/{trip.quota}</span>
                 </FilterChip>
               ))}
             </div>
@@ -289,7 +289,7 @@ export default function TeacherPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <span className="inline-flex items-center px-2.5 py-1 rounded-md font-mono text-[0.65rem] tracking-[0.12em] uppercase bg-brass/12 text-brass border border-brass/25">
-                          {student.cities?.name || cities.find(c => c.city_id === student.city_id)?.name || 'Unknown'}
+                          {student.trips?.name || trips.find(t => t.trip_id === student.trip_id)?.name || 'Unknown'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap font-mono text-xs text-ink-soft">

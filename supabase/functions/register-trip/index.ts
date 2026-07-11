@@ -12,7 +12,7 @@ interface RegisterRequest {
   surname: string;
   class: string;
   class_no: string;
-  city_id: string;
+  trip_id: string;
 }
 
 serve(async (req) => {
@@ -30,10 +30,10 @@ serve(async (req) => {
 
     // Parse request body
     const body: RegisterRequest = await req.json();
-    const { student_id, name, surname, class: studentClass, class_no, city_id } = body;
+    const { student_id, name, surname, class: studentClass, class_no, trip_id } = body;
 
     // Validate input
-    if (!student_id || !name || !surname || !city_id) {
+    if (!student_id || !name || !surname || !trip_id) {
       return new Response(
         JSON.stringify({
           success: false,
@@ -68,19 +68,19 @@ serve(async (req) => {
       );
     }
 
-    // Get city quota
-    const { data: city, error: cityError } = await supabaseClient
-      .from("cities")
+    // Get trip quota
+    const { data: trip, error: tripError } = await supabaseClient
+      .from("trips")
       .select("quota")
-      .eq("id", city_id)
+      .eq("id", trip_id)
       .single();
 
-    if (cityError || !city) {
+    if (tripError || !trip) {
       return new Response(
         JSON.stringify({
           success: false,
-          error_code: "INVALID_CITY",
-          message: "Invalid city selected.",
+          error_code: "INVALID_TRIP",
+          message: "Invalid trip selected.",
         }),
         {
           status: 400,
@@ -89,23 +89,23 @@ serve(async (req) => {
       );
     }
 
-    // Count current students in the city
+    // Count current students on the trip
     const { count, error: countError } = await supabaseClient
       .from("students")
       .select("*", { count: "exact", head: true })
-      .eq("city_id", city_id);
+      .eq("trip_id", trip_id);
 
     if (countError) {
       throw countError;
     }
 
     // Check if quota is full
-    if (count !== null && count >= city.quota) {
+    if (count !== null && count >= trip.quota) {
       return new Response(
         JSON.stringify({
           success: false,
           error_code: "QUOTA_FULL",
-          message: "The selected city is full.",
+          message: "The selected trip is full.",
         }),
         {
           status: 400,
@@ -121,7 +121,7 @@ serve(async (req) => {
       surname,
       class: studentClass,
       class_no,
-      city_id,
+      trip_id,
     });
 
     if (insertError) {

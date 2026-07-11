@@ -522,7 +522,7 @@ export default function RegisterPage() {
                         <button
                           type="submit"
                           disabled={!registrationOpen}
-                          className="w-full bg-ink hover:bg-ink/90 active:scale-[0.99] disabled:bg-ink/15 disabled:text-ink/40 text-paper font-semibold py-4 px-6 rounded-xl transition-all disabled:cursor-not-allowed text-lg shadow-lg hover:shadow-xl mt-2"
+                          className="w-full bg-ink hover:bg-ink/90 active:scale-[0.99] disabled:bg-ink/15 disabled:text-ink/40 text-paper font-semibold py-4 px-6 rounded-xl transition-all cursor-pointer disabled:cursor-not-allowed text-lg shadow-lg hover:shadow-xl mt-2"
                         >
                           {!registrationOpen ? "Boarding not open" : "Continue to destination →"}
                         </button>
@@ -550,7 +550,7 @@ export default function RegisterPage() {
                       </div>
                       <button
                         onClick={() => setStep(1)}
-                        className="font-mono text-[0.65rem] tracking-[0.15em] uppercase text-ink-soft hover:text-ink transition-colors shrink-0 ml-4"
+                        className="cursor-pointer font-mono text-[0.65rem] tracking-[0.15em] uppercase text-ink-soft hover:text-ink transition-colors shrink-0 ml-4"
                       >
                         ← Edit
                       </button>
@@ -586,7 +586,7 @@ export default function RegisterPage() {
                                 {selectedTripData.name}
                               </h3>
                               <p className="font-mono text-[0.65rem] tracking-[0.1em] uppercase text-ink-soft tabular-nums">
-                                {selectedTripData.current_count} / {selectedTripData.quota} taken · {selectedTripData.remaining} left
+                                <span className="font-bold text-ink">{selectedTripData.current_count} / {selectedTripData.quota}</span> taken · <span className="font-bold text-brass">{selectedTripData.remaining} left</span>
                               </p>
                             </div>
                             <AirplaneSeatMap

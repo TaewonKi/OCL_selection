@@ -41,11 +41,11 @@ function resolveProvince(part: string): [number, number] | undefined {
 }
 
 function pinPosition(trip: MapTrip): [number, number] | undefined {
-  const coords = trip.stops.map(resolveProvince).filter(Boolean) as [number, number][];
-  if (coords.length === 0) return undefined;
-  const cx = coords.reduce((s, [x]) => s + x, 0) / coords.length;
-  const cy = coords.reduce((s, [, y]) => s + y, 0) / coords.length;
-  return [cx, cy];
+  for (const stop of trip.stops) {
+    const coord = resolveProvince(stop);
+    if (coord) return coord;
+  }
+  return undefined;
 }
 
 // Returns all province names (lowercased) that the route visits.
@@ -65,6 +65,7 @@ function coordKey([x, y]: [number, number]) {
 
 export function ThailandMap({ trips, selectedTrip, onSelect, registrationOpen, mapClassName = "max-w-[280px]" }: ThailandMapProps) {
   const [openKey, setOpenKey] = useState<string | null>(null);
+  const [showManualList, setShowManualList] = useState(false);
 
   const pinned = trips
     .map((trip) => ({ trip, coord: pinPosition(trip) }))
@@ -144,7 +145,7 @@ export function ThailandMap({ trips, selectedTrip, onSelect, registrationOpen, m
             return (
               <div
                 key={key}
-                className="absolute -translate-x-1/2 -translate-y-full flex flex-col items-center"
+                className="group/pin absolute -translate-x-1/2 -translate-y-full flex flex-col items-center"
                 style={{ left: `${(coord[0] / VW) * 100}%`, top: `${(coord[1] / VH) * 100}%` }}
               >
                 {multi ? (
@@ -192,7 +193,7 @@ export function ThailandMap({ trips, selectedTrip, onSelect, registrationOpen, m
                       : "text-stamp border-line";
                     return (
                       <span
-                        className={`mb-1 rounded-md border bg-white px-1.5 py-0.5 font-mono text-[0.6rem] font-bold uppercase tracking-wide whitespace-nowrap shadow-sm transition-all duration-150 ${labelColor} ${
+                        className={`mb-1 rounded-md border bg-white px-1.5 py-0.5 font-mono text-[0.6rem] font-bold uppercase tracking-wide whitespace-nowrap shadow-sm transition-all duration-150 pointer-events-none ${labelColor} ${
                           isSelected ? "opacity-100 -translate-y-0.5 ring-1 ring-brass" : "opacity-0 group-hover/pin:opacity-100 group-hover/pin:-translate-y-0.5"
                         }`}
                       >
@@ -221,7 +222,7 @@ export function ThailandMap({ trips, selectedTrip, onSelect, registrationOpen, m
                       if (registrationOpen && trip.remaining > 0) onSelect(trip.trip_id);
                     }
                   }}
-                  className={`group/pin relative flex items-center justify-center focus:outline-none ${
+                  className={`relative flex items-center justify-center focus:outline-none ${
                     multi || (registrationOpen && !allFull) ? "cursor-pointer" : "cursor-not-allowed"
                   }`}
                 >
@@ -264,7 +265,7 @@ export function ThailandMap({ trips, selectedTrip, onSelect, registrationOpen, m
                     isSelected
                       ? "border-brass bg-brass/10 text-brass"
                       : "border-line bg-white text-ink-soft hover:border-ink/30 hover:text-ink"
-                  } ${!interactive ? "cursor-not-allowed opacity-60" : ""}`}
+                  } ${!interactive ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
                 >
                   {trip.name}
                   {isFull ? " · Full" : ` · ${trip.remaining}`}
@@ -274,6 +275,44 @@ export function ThailandMap({ trips, selectedTrip, onSelect, registrationOpen, m
           </div>
         </div>
       )}
+
+      <div className="mt-5 text-center">
+        <button
+          type="button"
+          onClick={() => setShowManualList((v) => !v)}
+          aria-expanded={showManualList}
+          className="cursor-pointer font-mono text-[0.6rem] tracking-[0.15em] uppercase text-ink-soft hover:text-ink underline underline-offset-2 transition-colors"
+        >
+          {showManualList ? "Hide manual selection" : "Can't tap a pin? Select manually"}
+        </button>
+
+        {showManualList && (
+          <div className="flex flex-wrap justify-center gap-2 mt-3">
+            {trips.map((trip) => {
+              const isFull = trip.remaining === 0;
+              const isSelected = selectedTrip === trip.trip_id;
+              const interactive = registrationOpen && !isFull;
+              return (
+                <button
+                  key={trip.trip_id}
+                  type="button"
+                  onClick={() => interactive && onSelect(trip.trip_id)}
+                  disabled={!interactive}
+                  aria-pressed={isSelected}
+                  className={`rounded-lg border px-3 py-1.5 font-mono text-[0.65rem] uppercase tracking-wide transition-all ${
+                    isSelected
+                      ? "border-brass bg-brass/10 text-brass"
+                      : "border-line bg-white text-ink-soft hover:border-ink/30 hover:text-ink"
+                  } ${!interactive ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
+                >
+                  {trip.name}
+                  {isFull ? " · Full" : ` · ${trip.remaining}`}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

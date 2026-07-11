@@ -43,4 +43,5 @@ export type ErrorCode =
   | "QUOTA_FULL"
   | "INVALID_INPUT"
   | "INVALID_TRIP"
+  | "INVALID_PASSCODE"
   | "SERVER_ERROR";

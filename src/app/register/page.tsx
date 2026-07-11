@@ -25,6 +25,7 @@ interface FormData {
   surname: string;
   class: string;
   class_no: string;
+  passcode: string;
 }
 
 const gateCode = (index: number) => `GATE ${(index + 1).toString().padStart(2, "0")}`;
@@ -39,6 +40,7 @@ export default function RegisterPage() {
     surname: "",
     class: "",
     class_no: "",
+    passcode: "",
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{
@@ -332,7 +334,7 @@ export default function RegisterPage() {
                     onClick={() => {
                       setRegistrationSuccess(false);
                       setStep(1);
-                      setFormData({ student_id: "", name: "", surname: "", class: "", class_no: "" });
+                      setFormData({ student_id: "", name: "", surname: "", class: "", class_no: "", passcode: "" });
                       setSelectedTrip(null);
                       setMessage(null);
                     }}
@@ -500,6 +502,21 @@ export default function RegisterPage() {
                               placeholder="33"
                             />
                           </div>
+                        </div>
+
+                        <div>
+                          <label className="block font-mono text-[0.7rem] tracking-[0.15em] uppercase text-ink-soft mb-2">
+                            Access code
+                          </label>
+                          <input
+                            type="password"
+                            required
+                            disabled={!registrationOpen}
+                            value={formData.passcode}
+                            onChange={(e) => setFormData({ ...formData, passcode: e.target.value })}
+                            className="w-full px-4 py-3.5 bg-paper border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-ink/40 focus:border-transparent text-ink transition-all text-base placeholder:text-ink/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                            placeholder="Announced by your teacher"
+                          />
                         </div>
 
                         <button

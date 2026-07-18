@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { callFunction, getFunctionErrorMessage } from "@/lib/functions";
 import { useEffect, useState } from "react";
 
 interface Trip {
@@ -25,6 +26,14 @@ interface Student {
   };
 }
 
+interface TripStatusResponse {
+  trips?: Trip[];
+}
+
+interface StudentsResponse {
+  students?: Student[];
+}
+
 export default function TeacherPage() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
@@ -33,6 +42,7 @@ export default function TeacherPage() {
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [uniqueClasses, setUniqueClasses] = useState<string[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const exportToGoogleSheets = () => {
     // Get the filtered trip name
@@ -72,47 +82,40 @@ export default function TeacherPage() {
 
   const fetchTrips = async () => {
     try {
-      const functionsUrl = process.env.NEXT_PUBLIC_SUPABASE_FUNCTIONS_URL;
-      const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-      const response = await fetch(`${functionsUrl}/trip-status`, {
-        headers: {
-          'Authorization': `Bearer ${anonKey}`,
-          'apikey': anonKey || '',
-        },
-      });
-      const data = await response.json();
+      const data = await callFunction<TripStatusResponse>("trip-status");
       setTrips(data.trips || []);
+      setLoadError(null);
     } catch (error) {
       console.error("Error fetching trips:", error);
+      setTrips([]);
+      setLoadError(
+        getFunctionErrorMessage(error, "The destination manifest could not be loaded. Please try again.")
+      );
     }
   };
 
   const fetchStudents = async (tripId: string | null) => {
     setLoading(true);
     try {
-      const functionsUrl = process.env.NEXT_PUBLIC_SUPABASE_FUNCTIONS_URL;
-      const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-      let url = `${functionsUrl}/get-students`;
+      let path = "get-students";
       if (tripId) {
-        url += `?trip_id=${tripId}`;
+        path += `?trip_id=${encodeURIComponent(tripId)}`;
       }
 
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${anonKey}`,
-          'apikey': anonKey || '',
-        },
-      });
-      const data = await response.json();
+      const data = await callFunction<StudentsResponse>(path);
       setAllStudents(data.students || []);
       setStudents(data.students || []);
+      setLoadError(null);
 
       // Extract unique classes
       const classes = Array.from(new Set((data.students || []).map((s: Student) => s.class).filter(Boolean))) as string[];
       setUniqueClasses(classes.sort());
     } catch (error) {
       console.error("Error fetching students:", error);
+      setAllStudents([]);
+      setStudents([]);
+      setUniqueClasses([]);
+      setLoadError(getFunctionErrorMessage(error, "The passenger manifest could not be loaded. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -190,6 +193,25 @@ export default function TeacherPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+        {loadError && (
+          <div className="mb-8 rounded-2xl border border-oxblood/20 bg-oxblood/5 p-5">
+            <p className="font-mono text-[0.65rem] tracking-[0.2em] uppercase text-oxblood mb-2">
+              Manifest unavailable
+            </p>
+            <p className="text-ink-soft mb-4">{loadError}</p>
+            <button
+              type="button"
+              onClick={() => {
+                fetchTrips();
+                fetchStudents(selectedTrip);
+              }}
+              className="inline-flex items-center justify-center rounded-xl bg-ink px-5 py-3 font-semibold text-paper transition-all hover:bg-ink/90"
+            >
+              Retry manifest
+            </button>
+          </div>
+        )}
+
         {/* Filters */}
         <div className="mb-8 space-y-6">
           <div>

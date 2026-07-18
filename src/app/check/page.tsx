@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { callFunction, getFunctionErrorMessage } from "@/lib/functions";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -11,6 +12,12 @@ interface RegistrationData {
   class: string;
   class_no: string;
   trip: string;
+}
+
+interface CheckRegistrationResponse {
+  success: boolean;
+  message?: string;
+  data?: RegistrationData;
 }
 
 export default function CheckRegistrationPage() {
@@ -24,6 +31,10 @@ export default function CheckRegistrationPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) {
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setRegistrationData(null);
@@ -35,29 +46,19 @@ export default function CheckRegistrationPage() {
     }
 
     try {
-      const functionsUrl = process.env.NEXT_PUBLIC_SUPABASE_FUNCTIONS_URL;
-      const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-      const response = await fetch(`${functionsUrl}/check-registration`, {
+      const data = await callFunction<CheckRegistrationResponse>("check-registration", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          'Authorization': `Bearer ${anonKey}`,
-          'apikey': anonKey || '',
-        },
-        body: JSON.stringify({ student_id: studentId }),
+        body: { student_id: studentId },
       });
 
-      const data = await response.json();
-
-      if (data.success) {
+      if (data.success && data.data) {
         setRegistrationData(data.data);
       } else {
         setError(data.message || "Registration not found");
       }
     } catch (err) {
       console.error("Error checking registration:", err);
-      setError("Failed to check registration. Please try again.");
+      setError(getFunctionErrorMessage(err, "Failed to check registration. Please try again."));
     } finally {
       setLoading(false);
     }

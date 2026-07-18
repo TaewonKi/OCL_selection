@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { callFunction, getFunctionErrorMessage } from "@/lib/functions";
 import { motion, AnimatePresence } from "framer-motion";
 import { Countdown } from "../components/Countdown";
 import { AirplaneSeatMap } from "../components/AirplaneSeatMap";
@@ -26,6 +27,15 @@ interface FormData {
   class: string;
   class_no: string;
   passcode: string;
+}
+
+interface TripStatusResponse {
+  trips?: Trip[];
+}
+
+interface RegisterTripResponse {
+  success: boolean;
+  message?: string;
 }
 
 const gateCode = (index: number) => `GATE ${(index + 1).toString().padStart(2, "0")}`;
@@ -52,6 +62,7 @@ export default function RegisterPage() {
   const [registeredTripName, setRegisteredTripName] = useState<string>("");
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [registrationOpen, setRegistrationOpen] = useState(false);
+  const [tripStatusError, setTripStatusError] = useState<string | null>(null);
   const homeButtonClasses =
     "inline-flex items-center gap-2 px-4 py-2 text-xs font-mono tracking-[0.15em] uppercase text-ink-soft border border-ink/15 rounded-lg hover:bg-ink/5 hover:text-ink transition-all";
 
@@ -67,18 +78,18 @@ export default function RegisterPage() {
 
   const fetchTripStatus = async () => {
     try {
-      const functionsUrl = process.env.NEXT_PUBLIC_SUPABASE_FUNCTIONS_URL;
-      const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-      const response = await fetch(`${functionsUrl}/trip-status`, {
-        headers: {
-          'Authorization': `Bearer ${anonKey}`,
-          'apikey': anonKey || '',
-        },
-      });
-      const data = await response.json();
+      const data = await callFunction<TripStatusResponse>("trip-status");
       setTrips(data.trips || []);
+      setTripStatusError(null);
     } catch (error) {
       console.error("Error fetching trip status:", error);
+      setTrips([]);
+      setTripStatusError(
+        getFunctionErrorMessage(
+          error,
+          "We couldn't load the destination manifest. Check your connection and try again."
+        )
+      );
     }
   };
 
@@ -114,6 +125,12 @@ export default function RegisterPage() {
 
   // Step 2 submit → show confirmation
   const handleSubmit = () => {
+    if (tripStatusError) {
+      setMessage({ type: "error", text: tripStatusError });
+      setShowErrorPopup(true);
+      return;
+    }
+
     if (!selectedTrip) {
       setMessage({ type: "error", text: "Please select a destination" });
       setShowErrorPopup(true);
@@ -123,40 +140,38 @@ export default function RegisterPage() {
   };
 
   const confirmRegistration = async () => {
+    if (loading) {
+      return;
+    }
+
     setLoading(true);
     setMessage(null);
     setShowErrorPopup(false);
     setShowConfirmation(false);
 
     try {
-      const functionsUrl = process.env.NEXT_PUBLIC_SUPABASE_FUNCTIONS_URL;
-      const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-      const response = await fetch(`${functionsUrl}/register-trip`, {
+      const data = await callFunction<RegisterTripResponse>("register-trip", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          'Authorization': `Bearer ${anonKey}`,
-          'apikey': anonKey || '',
-        },
-        body: JSON.stringify({
+        body: {
           ...formData,
           trip_id: selectedTrip,
-        }),
+        },
       });
-
-      const data = await response.json();
 
       if (data.success) {
         const tripName = trips.find(t => t.trip_id === selectedTrip)?.name || "";
         setRegisteredTripName(tripName);
         setRegistrationSuccess(true);
       } else {
-        setMessage({ type: "error", text: data.message });
+        setMessage({ type: "error", text: data.message || "We couldn't book that seat. Please try again." });
         setShowErrorPopup(true);
       }
     } catch (error) {
       console.error("Failed to register student", error);
-      setMessage({ type: "error", text: "Failed to register. Please try again." });
+      setMessage({
+        type: "error",
+        text: getFunctionErrorMessage(error, "Failed to register. Please try again."),
+      });
       setShowErrorPopup(true);
     } finally {
       setLoading(false);
@@ -566,13 +581,29 @@ export default function RegisterPage() {
                         Tap a pin to choose where you&apos;ll fly.
                       </p>
 
-                      <ThailandMap
-                        trips={trips}
-                        selectedTrip={selectedTrip}
-                        onSelect={setSelectedTrip}
-                        registrationOpen={registrationOpen}
-                        mapClassName="max-w-[380px]"
-                      />
+                      {tripStatusError ? (
+                        <div className="rounded-2xl border border-oxblood/20 bg-oxblood/5 p-5 text-center">
+                          <p className="font-mono text-[0.65rem] tracking-[0.2em] uppercase text-oxblood mb-2">
+                            Manifest unavailable
+                          </p>
+                          <p className="text-ink-soft mb-4">{tripStatusError}</p>
+                          <button
+                            type="button"
+                            onClick={fetchTripStatus}
+                            className="inline-flex items-center justify-center rounded-xl bg-ink px-5 py-3 font-semibold text-paper transition-all hover:bg-ink/90"
+                          >
+                            Retry manifest
+                          </button>
+                        </div>
+                      ) : (
+                        <ThailandMap
+                          trips={trips}
+                          selectedTrip={selectedTrip}
+                          onSelect={setSelectedTrip}
+                          registrationOpen={registrationOpen}
+                          mapClassName="max-w-[380px]"
+                        />
+                      )}
 
                       {/* Selected destination cabin */}
                       <div className="mt-6 mb-8">

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useServerTime } from '../hooks/useServerTime';
 
 const noopSubscribe = () => () => {};
@@ -13,7 +14,7 @@ const useIsClient = () =>
     () => false
   );
 
-const TARGET_DATE = new Date('2025-01-01T11:00:00.000Z');
+const TARGET_DATE = new Date('2026-08-29T10:51:00.000Z');
 const TARGET_TIMESTAMP = TARGET_DATE.getTime(); // 01 Jan 2027, 18:00 UTC+7
 
 const formattedDate = TARGET_DATE.toLocaleDateString('en-GB', {
@@ -79,6 +80,7 @@ export function Countdown({ className, onAvailabilityChange }: CountdownProps) {
     onAvailabilityChange?.(unlocked);
   }, [onAvailabilityChange, unlocked]);
   const { days, hours, minutes, seconds } = useMemo(() => humanize(remaining), [remaining]);
+  const isFinalCountdown = !unlocked && days === 0 && hours === 0 && minutes === 0;
 
   if (!isClient) {
     return (
@@ -94,6 +96,7 @@ export function Countdown({ className, onAvailabilityChange }: CountdownProps) {
 
   return (
     <div className={boardClasses(className)}>
+      {unlocked && <ApprovalStamp />}
       <div className="px-5 sm:px-8 py-7 sm:py-9">
         {/* Board header */}
         <div className="flex items-center justify-between gap-4 pb-6 mb-7 border-b border-paper/15">
@@ -116,15 +119,21 @@ export function Countdown({ className, onAvailabilityChange }: CountdownProps) {
             <p className="font-mono text-[0.65rem] tracking-[0.3em] text-brass-soft uppercase text-center mb-5">
               Registration departs in
             </p>
-            <div className="flex items-stretch justify-center gap-2 sm:gap-3">
-              <TimeBlock label="Days" value={pad(days)} />
-              <Colon />
-              <TimeBlock label="Hours" value={pad(hours)} />
-              <Colon />
-              <TimeBlock label="Minutes" value={pad(minutes)} />
-              <Colon />
-              <TimeBlock label="Seconds" value={pad(seconds)} />
-            </div>
+            {isFinalCountdown ? (
+              <div className="flex items-stretch justify-center">
+                <TimeBlock label="Seconds" value={pad(seconds)} size="lg" />
+              </div>
+            ) : (
+              <div className="flex items-stretch justify-center gap-2 sm:gap-3">
+                <TimeBlock label="Days" value={pad(days)} />
+                <Colon />
+                <TimeBlock label="Hours" value={pad(hours)} />
+                <Colon />
+                <TimeBlock label="Minutes" value={pad(minutes)} />
+                <Colon />
+                <TimeBlock label="Seconds" value={pad(seconds)} />
+              </div>
+            )}
           </>
         )}
 
@@ -149,23 +158,88 @@ export function Countdown({ className, onAvailabilityChange }: CountdownProps) {
   );
 }
 
+// Oversized ink stamp pressed onto the board once the gate opens — the
+// single clearest signal that registration can now be claimed.
+function ApprovalStamp() {
+  return (
+    <div
+      className="stamp-in absolute top-1/2 right-3 sm:right-6 z-10 -translate-y-1/2 rotate-[-12deg]"
+      aria-hidden="true"
+    >
+      <div className="flex h-20 w-20 sm:h-28 sm:w-28 flex-col items-center justify-center gap-1 rounded-full border-[3px] border-stamp bg-stamp/10 text-stamp shadow-lg">
+        <svg
+          className="h-7 w-7 sm:h-9 sm:w-9"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+        </svg>
+        <span className="font-mono text-[0.5rem] sm:text-[0.6rem] tracking-[0.15em] uppercase leading-none">
+          Open
+        </span>
+      </div>
+    </div>
+  );
+}
+
 type TimeBlockProps = {
   label: string;
   value: string;
+  size?: 'md' | 'lg';
 };
 
-function TimeBlock({ label, value }: TimeBlockProps) {
+function TimeBlock({ label, value, size = 'md' }: TimeBlockProps) {
+  const tileClasses =
+    size === 'lg'
+      ? 'px-5 sm:px-7 py-6 sm:py-8 min-w-[84px] sm:min-w-[130px]'
+      : 'px-3 sm:px-5 py-4 sm:py-5 min-w-[58px] sm:min-w-[84px]';
+  const labelClasses =
+    size === 'lg'
+      ? 'mt-3 text-xs sm:text-sm tracking-[0.25em]'
+      : 'mt-2.5 text-[0.6rem] sm:text-[0.65rem] tracking-[0.2em]';
+
   return (
     <div className="flex flex-col items-center">
-      <div className="flap rounded-xl bg-black/35 ring-1 ring-paper/10 px-3 sm:px-5 py-4 sm:py-5 min-w-[58px] sm:min-w-[84px]">
-        <div className="font-mono text-3xl sm:text-5xl font-semibold text-paper leading-none tabular-nums">
-          {value}
-        </div>
+      <div className={`flap flex rounded-xl bg-black/35 ring-1 ring-paper/10 ${tileClasses}`}>
+        {value.split('').map((digit, i) => (
+          <RollingDigit key={i} digit={digit} size={size} />
+        ))}
       </div>
-      <div className="mt-2.5 font-mono text-[0.6rem] sm:text-[0.65rem] tracking-[0.2em] uppercase text-paper/50">
-        {label}
-      </div>
+      <div className={`font-mono uppercase text-paper/50 ${labelClasses}`}>{label}</div>
     </div>
+  );
+}
+
+// Suitcase-lock style digit wheel: the outgoing digit rolls up and out while
+// the incoming one rolls up from below, like a mechanical tumbler.
+function RollingDigit({ digit, size = 'md' }: { digit: string; size?: 'md' | 'lg' }) {
+  const reduceMotion = useReducedMotion();
+  const digitClasses =
+    size === 'lg'
+      ? 'h-[1em] w-[0.62em] text-6xl sm:text-8xl'
+      : 'h-[1em] w-[0.62em] text-3xl sm:text-5xl';
+
+  return (
+    <span
+      className={`relative inline-block overflow-hidden font-mono font-semibold text-paper leading-none tabular-nums ${digitClasses}`}
+    >
+      <span className="invisible" aria-hidden="true">
+        {digit}
+      </span>
+      <AnimatePresence mode="popLayout" initial={false}>
+        <motion.span
+          key={digit}
+          initial={reduceMotion ? false : { y: '100%' }}
+          animate={{ y: '0%' }}
+          exit={reduceMotion ? undefined : { y: '-100%' }}
+          transition={{ duration: 0.32, ease: [0.32, 0.72, 0.35, 1] }}
+          className="absolute inset-0 flex items-center justify-center"
+        >
+          {digit}
+        </motion.span>
+      </AnimatePresence>
+    </span>
   );
 }
 

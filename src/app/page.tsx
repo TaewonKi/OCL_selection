@@ -28,16 +28,22 @@ export default function LandingPage() {
             <div className="flex items-center justify-center gap-3 mb-7">
               <span className="hidden sm:block h-px w-8 bg-brass/50" aria-hidden="true" />
               <span className="font-mono text-[0.6rem] sm:text-xs tracking-[0.25em] text-brass uppercase">
-                International Program · Est. 2027
+                International Program
               </span>
               <span className="hidden sm:block h-px w-8 bg-brass/50" aria-hidden="true" />
             </div>
 
-            <h1 className="title-float font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold leading-[0.95] tracking-tight text-ink mb-7">
+            <h1 className="title-float font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold leading-[0.95] tracking-tight text-ink mb-5">
               Outside Classroom
               <br />
               <span className="italic text-brass">Learning 2027</span>
             </h1>
+
+            {!registrationOpen && (
+              <span className="stamp inline-block text-oxblood mb-2" aria-label="Registration not yet open">
+                Not yet open
+              </span>
+            )}
           </motion.div>
 
           <motion.p
@@ -46,8 +52,11 @@ export default function LandingPage() {
             transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
             className="text-lg sm:text-xl text-ink-soft max-w-2xl mx-auto leading-relaxed mb-12"
           >
-            Several trips. One term abroad. Choose a destination, claim your seat,
-            and learn the world first-hand alongside your year group.
+            {registrationOpen ? (
+              <>Several trips. One term abroad. Choose a destination, claim your seat, and learn the world first-hand alongside your year group.</>
+            ) : (
+              <>Several trips. One term abroad. Seats aren&apos;t claimable yet — the gate opens at the time on the board below.</>
+            )}
           </motion.p>
 
           <motion.div

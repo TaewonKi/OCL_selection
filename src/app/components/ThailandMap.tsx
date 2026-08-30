@@ -65,13 +65,10 @@ function coordKey([x, y]: [number, number]) {
 
 export function ThailandMap({ trips, selectedTrip, onSelect, registrationOpen, mapClassName = "max-w-[280px]" }: ThailandMapProps) {
   const [openKey, setOpenKey] = useState<string | null>(null);
-  const [showManualList, setShowManualList] = useState(false);
 
   const pinned = trips
     .map((trip) => ({ trip, coord: pinPosition(trip) }))
     .filter((e): e is { trip: MapTrip; coord: [number, number] } => Boolean(e.coord));
-
-  const unplaced = trips.filter((trip) => !pinPosition(trip));
 
   // Provinces to glow: derived from the selected trip's route.
   const glowingProvinces: Set<string> = selectedTrip
@@ -91,6 +88,78 @@ export function ThailandMap({ trips, selectedTrip, onSelect, registrationOpen, m
 
   return (
     <div>
+      {/* Primary: numbered manifest list — the main way to choose a destination */}
+      <div className="space-y-2.5 mb-8">
+        {trips.map((trip, i) => {
+          const isFull = trip.remaining === 0;
+          const isSelected = selectedTrip === trip.trip_id;
+          const interactive = registrationOpen && !isFull;
+          return (
+            <button
+              key={trip.trip_id}
+              type="button"
+              onClick={() => interactive && onSelect(trip.trip_id)}
+              disabled={!interactive}
+              aria-pressed={isSelected}
+              className={`group/row w-full flex items-center gap-3 sm:gap-4 rounded-2xl border p-3.5 sm:p-4 text-left transition-all duration-150 ${
+                isSelected
+                  ? "border-brass bg-brass/5 shadow-md"
+                  : isFull
+                  ? "border-line bg-paper/60"
+                  : "border-line bg-white hover:border-ink/25 hover:shadow-sm"
+              } ${interactive ? "cursor-pointer active:scale-[0.99]" : "cursor-not-allowed opacity-70"}`}
+            >
+              <span
+                className={`shrink-0 flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full border font-mono text-xs font-bold tabular-nums transition-colors ${
+                  isSelected
+                    ? "border-brass bg-brass text-white"
+                    : isFull
+                    ? "border-line text-ink-soft/50"
+                    : "border-ink/15 text-ink-soft group-hover/row:border-ink/30"
+                }`}
+              >
+                {String(i + 1).padStart(2, "0")}
+              </span>
+
+              <span className="min-w-0 flex-1">
+                <span className="block font-serif text-lg sm:text-xl font-semibold text-ink truncate">
+                  {trip.name}
+                </span>
+                <span className="block font-mono text-[0.6rem] sm:text-[0.65rem] tracking-[0.15em] uppercase text-ink-soft mt-0.5 tabular-nums">
+                  {trip.current_count} / {trip.quota} taken
+                </span>
+              </span>
+
+              <span
+                className={`shrink-0 font-mono text-[0.65rem] sm:text-xs font-bold uppercase tracking-wide tabular-nums ${
+                  isFull ? "text-oxblood" : isSelected ? "text-brass" : "text-stamp"
+                }`}
+              >
+                {isFull ? "Full" : `${trip.remaining} left`}
+              </span>
+
+              <span
+                className={`shrink-0 flex h-5 w-5 items-center justify-center rounded-full border transition-all ${
+                  isSelected ? "border-brass bg-brass text-white scale-100 opacity-100" : "border-ink/15 scale-75 opacity-0"
+                }`}
+                aria-hidden="true"
+              >
+                <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Secondary: route map — an alternate, visual way to browse the same list.
+          Pins are precise-pointer territory, so they're desktop/tablet-only;
+          mobile still gets the map as a route preview, minus the tap targets. */}
+      <p className="font-mono text-[0.6rem] tracking-[0.2em] uppercase text-ink-soft mb-3 text-center">
+        <span className="sm:hidden">Route preview</span>
+        <span className="hidden sm:inline">Or explore the route map</span>
+      </p>
       <div className={`relative mx-auto w-full ${mapClassName}`}>
         <svg viewBox={`0 0 ${VW} ${VH}`} className="block w-full h-auto" aria-hidden="true">
           <defs>
@@ -140,12 +209,12 @@ export function ThailandMap({ trips, selectedTrip, onSelect, registrationOpen, m
             const allFull = group.every((t) => t.remaining === 0);
             const multi = group.length > 1;
 
-            const dotColor = allFull ? "bg-oxblood" : anySelected ? "bg-brass" : "bg-stamp";
+            const pinColor = allFull ? "text-oxblood" : anySelected ? "text-brass" : "text-stamp";
 
             return (
               <div
                 key={key}
-                className="group/pin absolute -translate-x-1/2 -translate-y-full flex flex-col items-center"
+                className="group/pin absolute -translate-x-1/2 -translate-y-full hidden sm:flex flex-col items-center"
                 style={{ left: `${(coord[0] / VW) * 100}%`, top: `${(coord[1] / VH) * 100}%` }}
               >
                 {multi ? (
@@ -222,18 +291,30 @@ export function ThailandMap({ trips, selectedTrip, onSelect, registrationOpen, m
                       if (registrationOpen && trip.remaining > 0) onSelect(trip.trip_id);
                     }
                   }}
-                  className={`relative flex items-center justify-center focus:outline-none ${
+                  className={`relative flex items-center justify-center touch-manipulation focus:outline-none [-webkit-tap-highlight-color:transparent] ${
                     multi || (registrationOpen && !allFull) ? "cursor-pointer" : "cursor-not-allowed"
                   }`}
                 >
-                  <span
-                    className={`block h-3.5 w-3.5 -rotate-45 border-2 border-white shadow transition-transform duration-150 ${dotColor} ${
-                      anySelected || isGroupOpen ? "scale-125" : "group-hover/pin:scale-110"
+                  {/* Invisible touch-target buffer: the arrow marker itself is already
+                      larger than the old dot, this just rounds it up to a comfortable
+                      tap size and forgives a tap that lands just beside it. */}
+                  <span className="absolute -inset-2.5 sm:-inset-2" aria-hidden="true" />
+                  {/* Arrow/pin marker: the point touches the exact destination, the
+                      body sits above it in open space so there's more to aim for
+                      than a tiny dot right on top of the province. */}
+                  <svg
+                    viewBox="0 0 24 32"
+                    className={`h-7 w-6 sm:h-9 sm:w-7 drop-shadow transition-transform duration-150 origin-bottom ${pinColor} ${
+                      anySelected || isGroupOpen ? "scale-110" : "group-hover/pin:scale-105 active:scale-110"
                     }`}
-                    style={{ borderRadius: "50% 50% 50% 0" }}
-                  />
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path d="M12 0C5.373 0 0 5.373 0 12c0 8.5 10.6 18.9 11.14 19.42a1.25 1.25 0 0 0 1.72 0C13.4 30.9 24 20.5 24 12 24 5.373 18.627 0 12 0z" />
+                    <circle cx="12" cy="12" r="4.5" fill="white" />
+                  </svg>
                   {multi && (
-                    <span className="absolute -top-1.5 -right-2 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-ink text-white font-mono text-[0.5rem] font-bold leading-none border border-white">
+                    <span className="absolute -top-1 -right-1.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-ink text-white font-mono text-[0.5rem] font-bold leading-none border border-white">
                       {group.length}
                     </span>
                   )}
@@ -242,76 +323,6 @@ export function ThailandMap({ trips, selectedTrip, onSelect, registrationOpen, m
             );
           })}
         </div>
-      </div>
-
-      {unplaced.length > 0 && (
-        <div className="mt-5">
-          <p className="font-mono text-[0.6rem] tracking-[0.2em] uppercase text-ink-soft mb-2 text-center">
-            More destinations
-          </p>
-          <div className="flex flex-wrap justify-center gap-2">
-            {unplaced.map((trip) => {
-              const isFull = trip.remaining === 0;
-              const isSelected = selectedTrip === trip.trip_id;
-              const interactive = registrationOpen && !isFull;
-              return (
-                <button
-                  key={trip.trip_id}
-                  type="button"
-                  onClick={() => interactive && onSelect(trip.trip_id)}
-                  disabled={!interactive}
-                  aria-pressed={isSelected}
-                  className={`rounded-lg border px-3 py-1.5 font-mono text-[0.65rem] uppercase tracking-wide transition-all ${
-                    isSelected
-                      ? "border-brass bg-brass/10 text-brass"
-                      : "border-line bg-white text-ink-soft hover:border-ink/30 hover:text-ink"
-                  } ${!interactive ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
-                >
-                  {trip.name}
-                  {isFull ? " · Full" : ` · ${trip.remaining}`}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      <div className="mt-5 text-center">
-        <button
-          type="button"
-          onClick={() => setShowManualList((v) => !v)}
-          aria-expanded={showManualList}
-          className="cursor-pointer font-mono text-[0.6rem] tracking-[0.15em] uppercase text-ink-soft hover:text-ink underline underline-offset-2 transition-colors"
-        >
-          {showManualList ? "Hide manual selection" : "Can't tap a pin? Select manually"}
-        </button>
-
-        {showManualList && (
-          <div className="flex flex-wrap justify-center gap-2 mt-3">
-            {trips.map((trip) => {
-              const isFull = trip.remaining === 0;
-              const isSelected = selectedTrip === trip.trip_id;
-              const interactive = registrationOpen && !isFull;
-              return (
-                <button
-                  key={trip.trip_id}
-                  type="button"
-                  onClick={() => interactive && onSelect(trip.trip_id)}
-                  disabled={!interactive}
-                  aria-pressed={isSelected}
-                  className={`rounded-lg border px-3 py-1.5 font-mono text-[0.65rem] uppercase tracking-wide transition-all ${
-                    isSelected
-                      ? "border-brass bg-brass/10 text-brass"
-                      : "border-line bg-white text-ink-soft hover:border-ink/30 hover:text-ink"
-                  } ${!interactive ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
-                >
-                  {trip.name}
-                  {isFull ? " · Full" : ` · ${trip.remaining}`}
-                </button>
-              );
-            })}
-          </div>
-        )}
       </div>
     </div>
   );

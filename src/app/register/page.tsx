@@ -561,7 +561,7 @@ export default function RegisterPage() {
                       </div>
 
                       <p className="font-mono text-[0.65rem] tracking-[0.1em] uppercase text-ink-soft mb-6">
-                        Tap a pin to choose where you&apos;ll fly.
+                        Pick a destination from the manifest below.
                       </p>
 
                       {tripStatusError ? (
@@ -584,7 +584,7 @@ export default function RegisterPage() {
                           selectedTrip={selectedTrip}
                           onSelect={setSelectedTrip}
                           registrationOpen={registrationOpen}
-                          mapClassName="max-w-[380px]"
+                          mapClassName="max-w-[560px]"
                         />
                       )}
 

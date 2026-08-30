@@ -145,7 +145,6 @@ export default function RegisterPage() {
     setLoading(true);
     setMessage(null);
     setShowErrorPopup(false);
-    setShowConfirmation(false);
 
     try {
       const data = await callFunction<RegisterTripResponse>("register-trip", {
@@ -159,6 +158,7 @@ export default function RegisterPage() {
       if (data.success) {
         const tripName = trips.find(t => t.trip_id === selectedTrip)?.name || "";
         setRegisteredTripName(tripName);
+        setShowConfirmation(false);
         setRegistrationSuccess(true);
       } else {
         setMessage({ type: "error", text: data.message || "We couldn't book that seat. Please try again." });
@@ -194,16 +194,29 @@ export default function RegisterPage() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8 border border-oxblood/20"
+              className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8 border border-oxblood/20 overflow-hidden"
             >
-              <div className="flex items-start gap-4">
+              {/* Ink stamp: mirrors the "Issued" pass stamp so success and
+                  failure read as the same system giving a clear verdict. */}
+              <div
+                className="stamp-in absolute top-4 right-4 rotate-[-10deg] z-10"
+                aria-hidden="true"
+              >
+                <div className="rounded-lg border-[3px] border-oxblood bg-white/95 px-3 py-1.5 shadow-md">
+                  <span className="font-mono text-xs sm:text-sm font-bold text-oxblood uppercase tracking-[0.2em] leading-none">
+                    Denied
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4 pr-16">
                 <div className="flex-shrink-0 w-12 h-12 bg-oxblood/10 rounded-full flex items-center justify-center text-oxblood">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <p className="font-mono text-[0.65rem] tracking-[0.2em] uppercase text-oxblood mb-1">Denied</p>
+                  <p className="font-mono text-[0.65rem] tracking-[0.2em] uppercase text-oxblood mb-1">Registration failed</p>
                   <h3 className="text-lg font-semibold text-ink mb-2">We couldn&apos;t book that seat</h3>
                   <p className="text-ink-soft mb-6">{message.text}</p>
                   <button
@@ -325,8 +338,24 @@ export default function RegisterPage() {
                   </svg>
                 </div>
 
-                <div className="p-6 sm:p-10">
-                  <h1 className="font-serif text-3xl sm:text-4xl font-semibold text-ink mb-2">You&apos;re booked.</h1>
+                <div className="relative p-6 sm:p-10">
+                  {/* Ink stamp: the moment the pass is actually issued, pressed
+                      onto the pass itself rather than announced separately. */}
+                  <div
+                    className="stamp-in absolute top-4 right-4 sm:top-8 sm:right-8 rotate-[-10deg] z-10"
+                    aria-hidden="true"
+                  >
+                    <div className="flex flex-col items-center gap-0.5 rounded-xl border-[3px] border-stamp bg-white/95 px-3.5 py-2 sm:px-5 sm:py-3 shadow-lg">
+                      <span className="font-mono text-[0.55rem] sm:text-[0.65rem] tracking-[0.25em] text-stamp font-bold uppercase leading-none">
+                        Boarding Pass
+                      </span>
+                      <span className="font-serif text-lg sm:text-2xl font-bold text-stamp uppercase tracking-wide leading-none">
+                        Issued
+                      </span>
+                    </div>
+                  </div>
+
+                  <h1 className="font-serif text-3xl sm:text-4xl font-semibold text-ink mb-2 pr-28 sm:pr-40">You&apos;re booked.</h1>
                   <p className="text-ink-soft mb-8">Keep this for your records — show it to your teacher if asked.</p>
 
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-y-6 gap-x-4 bg-paper rounded-2xl p-6 border border-line bg-security mb-6">
@@ -343,18 +372,12 @@ export default function RegisterPage() {
                 </div>
 
                 <div className="p-6 sm:p-8 pt-0">
-                  <button
-                    onClick={() => {
-                      setRegistrationSuccess(false);
-                      setStep(1);
-                      setFormData({ student_id: "", name: "", surname: "", class: "", class_no: "" });
-                      setSelectedTrip(null);
-                      setMessage(null);
-                    }}
-                    className="w-full bg-ink hover:bg-ink/90 text-paper font-semibold py-4 rounded-xl transition-all"
+                  <Link
+                    href="/"
+                    className="block w-full text-center bg-ink hover:bg-ink/90 text-paper font-semibold py-4 rounded-xl transition-all"
                   >
-                    Register another passenger
-                  </button>
+                    Done — back to home
+                  </Link>
                 </div>
               </div>
             </div>

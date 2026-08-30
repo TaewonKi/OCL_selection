@@ -22,11 +22,15 @@ interface Trip {
 
 interface FormData {
   student_id: string;
+  title: string;
   name: string;
+  middle_name: string;
   surname: string;
   class: string;
   class_no: string;
 }
+
+const TITLE_OPTIONS = ["เด็กชาย", "เด็กหญิง", "นาย", "นางสาว"];
 
 interface TripStatusResponse {
   trips?: Trip[];
@@ -45,7 +49,9 @@ export default function RegisterPage() {
   const [step, setStep] = useState<1 | 2>(1);
   const [formData, setFormData] = useState<FormData>({
     student_id: "",
+    title: "",
     name: "",
+    middle_name: "",
     surname: "",
     class: "",
     class_no: "",
@@ -178,6 +184,11 @@ export default function RegisterPage() {
 
   const selectedTripData = trips.find(t => t.trip_id === selectedTrip);
   const selectedIndex = trips.findIndex(t => t.trip_id === selectedTrip);
+  const fullName = [
+    `${formData.title}${formData.name}`,
+    formData.middle_name,
+    formData.surname,
+  ].filter(Boolean).join(" ");
 
   return (
     <div className="min-h-screen bg-paper text-ink">
@@ -272,7 +283,7 @@ export default function RegisterPage() {
                   <p className="text-ink-soft mb-8">Check the details below before we issue your pass.</p>
 
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-y-6 gap-x-4 bg-paper rounded-2xl p-6 border border-line bg-security mb-6">
-                    <Field label="Passenger" value={`${formData.name} ${formData.surname}`} />
+                    <Field label="Passenger" value={fullName} />
                     <Field label="Student ID" value={formData.student_id} mono />
                     <Field label="Class" value={formData.class} mono />
                     <Field label="Seat no." value={formData.class_no || "—"} mono />
@@ -359,7 +370,7 @@ export default function RegisterPage() {
                   <p className="text-ink-soft mb-8">Keep this for your records — show it to your teacher if asked.</p>
 
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-y-6 gap-x-4 bg-paper rounded-2xl p-6 border border-line bg-security mb-6">
-                    <Field label="Passenger" value={`${formData.name} ${formData.surname}`} />
+                    <Field label="Passenger" value={fullName} />
                     <Field label="Student ID" value={formData.student_id} mono />
                     <Field label="Class" value={formData.class} mono />
                     <Field label="Seat no." value={formData.class_no || "—"} mono />
@@ -458,6 +469,31 @@ export default function RegisterPage() {
                           />
                         </div>
 
+                        <div>
+                          <label className="block font-mono text-[0.7rem] tracking-[0.15em] uppercase text-ink-soft mb-2">
+                            Call name
+                          </label>
+                          <div className="relative">
+                            <select
+                              required
+                              disabled={!registrationOpen}
+                              value={formData.title}
+                              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                              className="w-full px-4 py-3.5 bg-paper border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-ink/40 focus:border-transparent text-ink transition-all text-base appearance-none disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <option value="" disabled>Select call name</option>
+                              {TITLE_OPTIONS.map((title) => (
+                                <option key={title} value={title}>{title}</option>
+                              ))}
+                            </select>
+                            <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-ink-soft">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </div>
+                          </div>
+                        </div>
+
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
                           <div>
                             <label className="block font-mono text-[0.7rem] tracking-[0.15em] uppercase text-ink-soft mb-2">
@@ -487,6 +523,20 @@ export default function RegisterPage() {
                               placeholder="Rakna"
                             />
                           </div>
+                        </div>
+
+                        <div>
+                          <label className="block font-mono text-[0.7rem] tracking-[0.15em] uppercase text-ink-soft mb-2">
+                            Middle name <span className="normal-case text-ink-soft/60">(optional)</span>
+                          </label>
+                          <input
+                            type="text"
+                            disabled={!registrationOpen}
+                            value={formData.middle_name}
+                            onChange={(e) => setFormData({ ...formData, middle_name: e.target.value })}
+                            className="w-full px-4 py-3.5 bg-paper border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-ink/40 focus:border-transparent text-ink transition-all text-base placeholder:text-ink/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                            placeholder="Optional"
+                          />
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
@@ -565,7 +615,7 @@ export default function RegisterPage() {
                     <div className="flex items-center justify-between bg-white border border-line rounded-2xl px-5 py-3.5 mb-6 shadow-sm">
                       <div className="flex items-center gap-4 min-w-0">
                         <span className="font-mono text-[0.6rem] tracking-[0.2em] uppercase text-brass shrink-0">Passenger</span>
-                        <span className="font-semibold text-ink truncate">{formData.name} {formData.surname}</span>
+                        <span className="font-semibold text-ink truncate">{fullName}</span>
                         <span className="font-mono text-xs text-ink-soft tabular-nums hidden sm:block">{formData.student_id}</span>
                         <span className="font-mono text-xs text-ink-soft hidden sm:block">{formData.class}</span>
                       </div>

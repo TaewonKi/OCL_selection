@@ -43,7 +43,9 @@ serve(async (req) => {
       .from("students")
       .select(`
         student_id,
+        title,
         name,
+        middle_name,
         surname,
         class,
         class_no,
@@ -75,7 +77,9 @@ serve(async (req) => {
         success: true,
         data: {
           student_id: student.student_id,
+          title: student.title,
           name: student.name,
+          middle_name: student.middle_name,
           surname: student.surname,
           class: student.class,
           class_no: student.class_no,

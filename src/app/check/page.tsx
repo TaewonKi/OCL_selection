@@ -7,7 +7,9 @@ import { motion, AnimatePresence } from "framer-motion";
 
 interface RegistrationData {
   student_id: string;
+  title: string;
   name: string;
+  middle_name?: string;
   surname: string;
   class: string;
   class_no: string;
@@ -173,7 +175,14 @@ export default function CheckRegistrationPage() {
                 <div className="p-6 sm:p-10">
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-y-6 gap-x-4 bg-paper rounded-2xl p-6 border border-line bg-security mb-6">
                     <Field label="Student ID" value={registrationData.student_id} mono />
-                    <Field label="Passenger" value={`${registrationData.name} ${registrationData.surname}`} />
+                    <Field
+                      label="Passenger"
+                      value={[
+                        `${registrationData.title}${registrationData.name}`,
+                        registrationData.middle_name,
+                        registrationData.surname,
+                      ].filter(Boolean).join(" ")}
+                    />
                     <Field label="Class" value={registrationData.class} mono />
                     <Field label="Seat no." value={registrationData.class_no || "—"} mono />
                   </div>

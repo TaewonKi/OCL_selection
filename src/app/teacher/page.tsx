@@ -15,7 +15,9 @@ interface Trip {
 interface Student {
   id: string;
   student_id: string;
+  title: string;
   name: string;
+  middle_name?: string;
   surname: string;
   class: string;
   class_no: string;
@@ -25,6 +27,11 @@ interface Student {
     name: string;
   };
 }
+
+const studentFullName = (student: Student) =>
+  [`${student.title ?? ""}${student.name}`, student.middle_name, student.surname]
+    .filter(Boolean)
+    .join(" ");
 
 interface TripStatusResponse {
   trips?: Trip[];
@@ -51,10 +58,12 @@ export default function TeacherPage() {
       : 'All Destinations';
 
     // Prepare CSV data
-    const headers = ['Student ID', 'First Name', 'Last Name', 'Class', 'Class No', 'Destination', 'Registered At'];
+    const headers = ['Student ID', 'Call Name', 'First Name', 'Middle Name', 'Last Name', 'Class', 'Class No', 'Destination', 'Registered At'];
     const rows = students.map(student => [
       student.student_id,
+      student.title,
       student.name,
+      student.middle_name || '',
       student.surname,
       student.class,
       student.class_no,
@@ -301,7 +310,7 @@ export default function TeacherPage() {
                         {student.student_id}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-ink">
-                        {student.name} {student.surname}
+                        {studentFullName(student)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap font-mono text-sm text-ink-soft">
                         {student.class}

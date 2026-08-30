@@ -11,7 +11,9 @@ export interface Trip {
 
 export interface Student {
   student_id: string;
+  title: string;
   name: string;
+  middle_name?: string;
   surname: string;
   class?: string;
   class_no?: string;
@@ -21,7 +23,9 @@ export interface Student {
 
 export interface RegisterRequest {
   student_id: string;
+  title: string;
   name: string;
+  middle_name?: string;
   surname: string;
   class?: string;
   class_no?: string;

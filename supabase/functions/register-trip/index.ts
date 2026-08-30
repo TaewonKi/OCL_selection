@@ -8,7 +8,9 @@ const corsHeaders = {
 
 interface RegisterRequest {
   student_id: string;
+  title: string;
   name: string;
+  middle_name?: string;
   surname: string;
   class: string;
   class_no: string;
@@ -30,10 +32,10 @@ serve(async (req) => {
 
     // Parse request body
     const body: RegisterRequest = await req.json();
-    const { student_id, name, surname, class: studentClass, class_no, trip_id } = body;
+    const { student_id, title, name, middle_name, surname, class: studentClass, class_no, trip_id } = body;
 
     // Validate input
-    if (!student_id || !name || !surname || !trip_id) {
+    if (!student_id || !title || !name || !surname || !trip_id) {
       return new Response(
         JSON.stringify({
           success: false,
@@ -51,7 +53,9 @@ serve(async (req) => {
     // registrations for the same trip can't both slip past the quota check.
     const { data: result, error: rpcError } = await supabaseClient.rpc("register_student", {
       p_student_id: student_id,
+      p_title: title,
       p_name: name,
+      p_middle_name: middle_name ?? "",
       p_surname: surname,
       p_class: studentClass,
       p_class_no: class_no,

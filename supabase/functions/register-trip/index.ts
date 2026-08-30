@@ -13,7 +13,6 @@ interface RegisterRequest {
   class: string;
   class_no: string;
   trip_id: string;
-  passcode: string;
 }
 
 serve(async (req) => {
@@ -31,10 +30,10 @@ serve(async (req) => {
 
     // Parse request body
     const body: RegisterRequest = await req.json();
-    const { student_id, name, surname, class: studentClass, class_no, trip_id, passcode } = body;
+    const { student_id, name, surname, class: studentClass, class_no, trip_id } = body;
 
     // Validate input
-    if (!student_id || !name || !surname || !trip_id || !passcode) {
+    if (!student_id || !name || !surname || !trip_id) {
       return new Response(
         JSON.stringify({
           success: false,
@@ -43,22 +42,6 @@ serve(async (req) => {
         }),
         {
           status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    // Check registration passcode (announced by teachers, keeps non-students out)
-    const expectedPasscode = Deno.env.get("REGISTRATION_PASSCODE");
-    if (!expectedPasscode || passcode !== expectedPasscode) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error_code: "INVALID_PASSCODE",
-          message: "Incorrect access code.",
-        }),
-        {
-          status: 401,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );

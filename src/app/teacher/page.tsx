@@ -172,7 +172,7 @@ export default function TeacherPage() {
               {students.length > 0 && (
                 <button
                   onClick={exportToGoogleSheets}
-                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-brass hover:bg-brass-soft text-ink font-semibold rounded-lg transition-all active:scale-95"
+                  className="cursor-pointer inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-brass hover:bg-brass-soft text-ink font-semibold rounded-lg transition-all active:scale-95"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -205,7 +205,7 @@ export default function TeacherPage() {
                 fetchTrips();
                 fetchStudents(selectedTrip);
               }}
-              className="inline-flex items-center justify-center rounded-xl bg-ink px-5 py-3 font-semibold text-paper transition-all hover:bg-ink/90"
+              className="cursor-pointer inline-flex items-center justify-center rounded-xl bg-ink px-5 py-3 font-semibold text-paper transition-all hover:bg-ink/90"
             >
               Retry manifest
             </button>
@@ -353,7 +353,7 @@ function FilterChip({
     <button
       onClick={onClick}
       aria-pressed={active}
-      className={`px-4 py-2 rounded-lg font-mono text-xs tracking-[0.1em] uppercase whitespace-nowrap border transition-all ${
+      className={`cursor-pointer px-4 py-2 rounded-lg font-mono text-xs tracking-[0.1em] uppercase whitespace-nowrap border transition-all ${
         active ? activeClasses : "bg-white text-ink-soft border-line hover:border-ink/30 hover:text-ink"
       }`}
     >

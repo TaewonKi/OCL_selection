@@ -236,11 +236,13 @@ export function ThailandMap({ trips, selectedTrip, onSelect, registrationOpen, m
                             if (interactive) { onSelect(trip.trip_id); setOpenKey(null); }
                           }}
                           className={`flex items-center justify-between gap-3 px-2.5 py-1.5 text-left font-mono text-[0.6rem] uppercase tracking-wide whitespace-nowrap transition-colors ${
+                            isFull ? "cursor-not-allowed" : "cursor-pointer"
+                          } ${
                             isSelected
                               ? "bg-brass/10 text-brass"
                               : isFull
-                              ? "text-oxblood/60 cursor-not-allowed"
-                              : "text-ink hover:bg-paper cursor-pointer"
+                              ? "text-oxblood/60"
+                              : "text-ink hover:bg-paper"
                           }`}
                         >
                           <span>{trip.name}</span>

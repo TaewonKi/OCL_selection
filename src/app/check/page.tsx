@@ -119,7 +119,7 @@ export default function CheckRegistrationPage() {
               <button
                 type="submit"
                 disabled={loading || studentId.length !== 5}
-                className="w-full bg-ink hover:bg-ink/90 active:scale-[0.99] disabled:bg-ink/15 disabled:text-ink/40 text-paper font-semibold py-4 px-6 rounded-xl transition-all disabled:cursor-not-allowed text-lg shadow-lg hover:shadow-xl"
+                className="cursor-pointer w-full bg-ink hover:bg-ink/90 active:scale-[0.99] disabled:bg-ink/15 disabled:text-ink/40 text-paper font-semibold py-4 px-6 rounded-xl transition-all disabled:cursor-not-allowed text-lg shadow-lg hover:shadow-xl"
               >
                 {loading ? "Looking up…" : "Find booking"}
               </button>
@@ -197,7 +197,7 @@ export default function CheckRegistrationPage() {
                       setRegistrationData(null);
                       setStudentId("");
                     }}
-                    className="w-full mt-6 bg-white border border-ink/15 hover:bg-ink/5 text-ink font-semibold py-4 rounded-xl transition-all"
+                    className="cursor-pointer w-full mt-6 bg-white border border-ink/15 hover:bg-ink/5 text-ink font-semibold py-4 rounded-xl transition-all"
                   >
                     Look up another booking
                   </button>

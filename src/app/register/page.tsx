@@ -221,7 +221,7 @@ export default function RegisterPage() {
                   <p className="text-ink-soft mb-6">{message.text}</p>
                   <button
                     onClick={() => { setShowErrorPopup(false); setMessage(null); }}
-                    className="w-full bg-oxblood hover:bg-oxblood/90 text-white font-semibold py-3 rounded-xl transition-colors"
+                    className="cursor-pointer w-full bg-oxblood hover:bg-oxblood/90 text-white font-semibold py-3 rounded-xl transition-colors"
                   >
                     Try again
                   </button>
@@ -290,14 +290,14 @@ export default function RegisterPage() {
                 <div className="flex flex-col sm:flex-row gap-3 p-6 sm:p-8 pt-0">
                   <button
                     onClick={() => setShowConfirmation(false)}
-                    className="flex-1 bg-white border border-ink/15 hover:bg-ink/5 text-ink font-semibold py-4 rounded-xl transition-all"
+                    className="cursor-pointer flex-1 bg-white border border-ink/15 hover:bg-ink/5 text-ink font-semibold py-4 rounded-xl transition-all"
                   >
                     Go back
                   </button>
                   <button
                     onClick={confirmRegistration}
                     disabled={loading}
-                    className="flex-1 bg-ink hover:bg-ink/90 disabled:bg-ink/40 text-paper font-semibold py-4 rounded-xl transition-all disabled:cursor-not-allowed"
+                    className="cursor-pointer flex-1 bg-ink hover:bg-ink/90 disabled:bg-ink/40 text-paper font-semibold py-4 rounded-xl transition-all disabled:cursor-not-allowed"
                   >
                     {loading ? "Issuing pass…" : "Issue boarding pass"}
                   </button>
@@ -596,7 +596,7 @@ export default function RegisterPage() {
                           <button
                             type="button"
                             onClick={fetchTripStatus}
-                            className="inline-flex items-center justify-center rounded-xl bg-ink px-5 py-3 font-semibold text-paper transition-all hover:bg-ink/90"
+                            className="cursor-pointer inline-flex items-center justify-center rounded-xl bg-ink px-5 py-3 font-semibold text-paper transition-all hover:bg-ink/90"
                           >
                             Retry manifest
                           </button>
@@ -644,7 +644,7 @@ export default function RegisterPage() {
                       <button
                         onClick={handleSubmit}
                         disabled={loading || !selectedTrip}
-                        className="w-full bg-ink hover:bg-ink/90 active:scale-[0.99] disabled:bg-ink/15 disabled:text-ink/40 text-paper font-semibold py-4 px-6 rounded-xl transition-all disabled:cursor-not-allowed text-lg shadow-lg hover:shadow-xl"
+                        className="cursor-pointer w-full bg-ink hover:bg-ink/90 active:scale-[0.99] disabled:bg-ink/15 disabled:text-ink/40 text-paper font-semibold py-4 px-6 rounded-xl transition-all disabled:cursor-not-allowed text-lg shadow-lg hover:shadow-xl"
                       >
                         {loading ? "Working…" : !selectedTrip ? "Select a destination" : "Review & confirm"}
                       </button>
